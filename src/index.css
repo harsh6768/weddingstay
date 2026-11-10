@@ -3,42 +3,45 @@
 @tailwind utilities;
 
 /*
-  Direction: night-sky wedding lawn. Deep plum-black surfaces in dark, cool porcelain in light,
-  rani pink as the one accent and haldi saffron as the warm second light. Big, tight grotesque headlines,
+  Direction: a printed wedding invitation. Ivory paper, maroon ink and gold leaf in light; a deep
+  maroon night with ivory and gold in dark. Cormorant serif headlines, marigold as the warm second light,
   pill controls, soft-edged panels. Colours are RGB triplets for Tailwind alpha.
 */
 :root {
-  --bg: 246 245 248; --surface: 255 255 255; --sunk: 240 238 244;
-  --ink: 22 17 28; --muted: 102 94 114; --line: 226 222 232;
-  --plum: 212 46 104; --onplum: 255 255 255; --plumsoft: 252 232 240; --marigold: 226 142 24;
-  --good: 20 136 88; --warn: 190 116 8; --bad: 204 44 60; --info: 58 96 214;
-  --glow-a: 212 46 104; --glow-b: 240 160 40;
-  --gold: 178 134 40;
+  --bg: 251 246 238; --surface: 255 252 246; --sunk: 245 236 222;
+  --ink: 62 16 30; --muted: 122 88 84; --line: 232 214 190;
+  --plum: 128 22 48; --onplum: 255 247 232; --plumsoft: 247 226 222; --marigold: 222 140 26;
+  --good: 46 120 70; --warn: 176 110 10; --bad: 176 36 46; --info: 60 90 160;
+  --glow-a: 222 140 26; --glow-b: 176 132 38;
+  --gold: 176 132 38;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: 14 11 19; --surface: 24 20 31; --sunk: 32 27 41;
-    --ink: 246 242 249; --muted: 162 152 176; --line: 46 40 57;
-    --plum: 255 94 148; --onplum: 34 8 20; --plumsoft: 66 22 42; --marigold: 255 186 82;
-    --good: 76 214 150; --warn: 246 182 72; --bad: 255 112 122; --info: 136 164 255;
-    --glow-a: 255 70 140; --glow-b: 255 170 60;
+    --bg: 24 11 17; --surface: 36 18 27; --sunk: 48 25 36;
+    --ink: 250 240 226; --muted: 196 166 156; --line: 74 44 54;
+    --plum: 236 120 144; --onplum: 40 6 16; --plumsoft: 82 28 46; --marigold: 246 172 64;
+    --good: 110 200 140; --warn: 240 182 80; --bad: 255 120 126; --info: 150 172 240;
+    --glow-a: 200 40 80; --glow-b: 230 170 70;
+    --gold: 220 180 96;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: 14 11 19; --surface: 24 20 31; --sunk: 32 27 41;
-  --ink: 246 242 249; --muted: 162 152 176; --line: 46 40 57;
-  --plum: 255 94 148; --onplum: 34 8 20; --plumsoft: 66 22 42; --marigold: 255 186 82;
-  --good: 76 214 150; --warn: 246 182 72; --bad: 255 112 122; --info: 136 164 255;
-  --glow-a: 255 70 140; --glow-b: 255 170 60;
-  color-scheme: dark;
+    --bg: 24 11 17; --surface: 36 18 27; --sunk: 48 25 36;
+    --ink: 250 240 226; --muted: 196 166 156; --line: 74 44 54;
+    --plum: 236 120 144; --onplum: 40 6 16; --plumsoft: 82 28 46; --marigold: 246 172 64;
+    --good: 110 200 140; --warn: 240 182 80; --bad: 255 120 126; --info: 150 172 240;
+    --glow-a: 200 40 80; --glow-b: 230 170 70;
+    --gold: 220 180 96;
+    color-scheme: dark;
 }
 
 html, body { background: rgb(var(--bg)); color: rgb(var(--ink)); }
+body { background-image: radial-gradient(120% 50% at 50% 0%, rgb(var(--glow-b) / 0.10), transparent 60%); background-attachment: fixed; font-variant-numeric: lining-nums; }
 body { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { text-wrap: balance; }
-.font-display { letter-spacing: -0.025em; }
-.num { font-variant-numeric: tabular-nums; }
+.font-display { letter-spacing: 0; font-variant-numeric: lining-nums; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
 :focus-visible { outline: 2px solid rgb(var(--plum)); outline-offset: 2px; border-radius: 10px; }
 
 /* Soft light behind hero areas */
@@ -76,10 +79,10 @@ h1, h2, h3 { text-wrap: balance; }
 .invite h1, .invite h2 { font-family: "Cormorant Garamond", Georgia, serif; letter-spacing: 0; font-weight: 600; }
 
 @layer components {
-  .card { @apply bg-surface border border-line rounded-[20px] shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-18px_rgb(var(--ink)/0.18)]; }
+  .card { @apply bg-surface border border-gold/30 rounded-[20px] shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-18px_rgb(var(--ink)/0.18)]; }
   .panel { @apply bg-sunk/70 rounded-2xl; }
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-[background,transform,box-shadow] duration-150 min-h-[40px] active:scale-[0.98]; }
-  .btn-primary { @apply btn bg-plum text-onplum shadow-[0_8px_20px_-8px_rgb(var(--plum)/0.55)] hover:brightness-110; }
+  .btn-primary { @apply btn bg-plum text-onplum shadow-[0_0_0_1px_rgb(var(--gold)/0.55)_inset,0_8px_20px_-8px_rgb(var(--plum)/0.55)] hover:brightness-110; }
   .btn-ghost { @apply btn border border-line bg-surface text-ink hover:bg-sunk; }
   .btn-dark { @apply btn bg-ink text-bg hover:opacity-90; }
   .input { @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] text-ink placeholder:text-muted/70 focus:outline-none focus:ring-4 focus:ring-plum/15 focus:border-plum/60 min-h-[44px]; }

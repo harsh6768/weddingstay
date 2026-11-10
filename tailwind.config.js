@@ -10,7 +10,7 @@ export default {
         good: v('good'), warn: v('warn'), bad: v('bad'), info: v('info'),
       },
       fontFamily: {
-        display: ['"Bricolage Grotesque"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
         serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
         script: ['"Great Vibes"', '"Cormorant Garamond"', 'cursive'],
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],

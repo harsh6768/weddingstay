@@ -1,6 +1,7 @@
 import { ArrowUpRight, Check, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Mark } from '../components/AppShell'
+import { Toran } from '../components/Ornaments'
 
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 const d = (ms: number) => ({ animationDelay: `${ms}ms` })
@@ -26,9 +27,12 @@ export default function Landing() {
         </div>
       </header>
 
-      <section className="glow mx-auto max-w-[1180px] pt-14 md:pt-24 pb-10" style={gutter}>
+      <div className="pointer-events-none flex justify-center overflow-hidden h-[64px] sm:h-[84px]" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, i) => <div key={i} className="w-[300px] sm:w-[400px] shrink-0"><Toran swags={4} /></div>)}
+      </div>
+      <section className="glow mx-auto max-w-[1180px] pt-6 md:pt-14 pb-10" style={gutter}>
         <h1 className="rise font-display font-semibold text-[48px] leading-[0.95] sm:text-[72px] md:text-[96px] max-w-[11ch]" style={d(0)}>
-          Every guest, every room, every night.
+          Every guest, every room, <em className="text-plum">every night.</em>
         </h1>
         <div className="mt-8 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <p className="rise text-[18px] md:text-[20px] leading-relaxed text-muted max-w-[46ch]" style={d(120)}>

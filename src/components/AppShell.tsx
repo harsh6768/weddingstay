@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useStore } from '../store'
 import { fmtRange } from '../lib/dates'
 import { SampleBanner } from './ui'
+import { Toran } from './Ornaments'
 
 const nav = [
   { to: '/app', label: 'Overview', icon: LayoutGrid, end: true },
@@ -41,8 +42,9 @@ export default function AppShell() {
   return (
     <div className="min-h-full md:flex">
       <aside className="hidden md:flex md:w-[248px] shrink-0 flex-col sticky top-0 h-screen p-3">
-        <div className="flex h-full flex-col rounded-[22px] border border-line bg-surface">
-          <NavLink to="/" className="flex items-center gap-2 px-5 pt-5 pb-4">
+        <div className="flex h-full flex-col overflow-hidden rounded-[22px] border border-gold/30 bg-surface">
+          <div className="pointer-events-none h-[46px] overflow-hidden"><Toran swags={3} /></div>
+          <NavLink to="/" className="flex items-center gap-2 px-5 pt-1 pb-4">
             <Mark className="h-7 w-7" />
             <span className="font-display text-[19px] font-semibold">WeddingStay</span>
           </NavLink>
@@ -81,6 +83,7 @@ export default function AppShell() {
       </aside>
 
       <div className="flex-1 min-w-0 pb-24 md:pb-10">
+        <div className="md:hidden pointer-events-none h-[34px] overflow-hidden"><Toran swags={4} /></div>
         <header className="md:hidden sticky z-20 flex items-center justify-between gap-2 border-b border-line bg-bg/85 backdrop-blur-xl py-3" style={{ top: 'env(safe-area-inset-top, 0px)', ...gutter }}>
           <NavLink to="/" className="flex items-center gap-2"><Mark className="h-6 w-6" /><span className="font-display text-[17px] font-semibold">WeddingStay</span></NavLink>
           <div className="flex items-center gap-2">
