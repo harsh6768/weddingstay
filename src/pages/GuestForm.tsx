@@ -88,7 +88,7 @@ export default function GuestForm() {
           {people.map((p) => (
             <div key={p.id} className="card p-4">
               <div className="flex items-center justify-between gap-2 mb-3"><div className="font-semibold">{p.firstName} {p.lastName}</div>{p.type === 'CHILD' && <span className="text-[12px] text-muted">Child</span>}</div>
-              <Choice name={`Is ${p.firstName} attending`} value={p.rsvp === 'PENDING' ? ('' as Rsvp) : p.rsvp} onChange={(v) => set(p.id, { rsvp: v })}
+              <Choice name={`Is ${p.firstName} attending`} value={p.rsvp === 'PENDING' ? ('' as Rsvp) : p.rsvp} onChange={(v) => set(p.id, { rsvp: v, attendance: Object.fromEntries(fns.map((f) => [f.id, v === 'NO' ? 'NO' : !p.attendance[f.id] || p.attendance[f.id] === 'PENDING' || p.attendance[f.id] === 'MAYBE' ? 'YES' : p.attendance[f.id]])) })}
                 options={[{ v: 'YES', label: 'Coming' }, { v: 'MAYBE', label: 'Maybe' }, { v: 'NO', label: 'Can’t come' }]} />
             </div>
           ))}
