@@ -83,7 +83,10 @@ export default function AppShell() {
       <div className="flex-1 min-w-0 pb-24 md:pb-10">
         <header className="md:hidden sticky z-20 flex items-center justify-between gap-2 border-b border-line bg-bg/85 backdrop-blur-xl py-3" style={{ top: 'env(safe-area-inset-top, 0px)', ...gutter }}>
           <NavLink to="/" className="flex items-center gap-2"><Mark className="h-6 w-6" /><span className="font-display text-[17px] font-semibold">WeddingStay</span></NavLink>
-          <span className="rounded-full bg-plumsoft px-2.5 py-0.5 text-[12px] font-medium text-plum num">{days} days to go</span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-plumsoft px-2.5 py-0.5 text-[12px] font-medium text-plum num">{days} days to go</span>
+            <NavLink to="/app/settings" aria-label="Settings" className={({ isActive }) => clsx('grid h-10 w-10 place-items-center rounded-full border border-line', isActive ? 'bg-ink text-bg' : 'bg-surface text-muted')}><Settings size={18} /></NavLink>
+          </div>
         </header>
         {inAcc && (
           <div className="md:hidden flex gap-1.5 overflow-x-auto py-2.5" style={gutter}>

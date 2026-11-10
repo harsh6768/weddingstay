@@ -181,7 +181,7 @@ export default function GuestForm() {
         </section>
       )}
 
-      <div className="mt-6 flex gap-3">
+      <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex gap-3 border-t border-line/70 bg-bg/85 px-4 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:backdrop-blur-none" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
         {step > 0 && <button type="button" className="btn-ghost" onClick={() => setStep(step === 4 && !anyComing ? 0 : step - 1)}><ArrowLeft size={16} /> Back</button>}
         {step < 4 ? (
           <button type="button" className="btn-primary flex-1" onClick={next} disabled={step === 0 && people.some((p) => p.rsvp === 'PENDING')} style={{ opacity: step === 0 && people.some((p) => p.rsvp === 'PENDING') ? 0.5 : 1 }}>Continue <ArrowRight size={16} /></button>

@@ -24,7 +24,23 @@ export default function Requirements() {
         <Stat label="Missing arrival details" value={s.missingArrival} tone={s.missingArrival ? 'warn' : undefined} />
         <Stat label="Waiting for a room" value={s.unallocated} tone={s.unallocated ? 'bad' : 'good'} />
       </div>
-      <div className="card overflow-x-auto">
+      <ul className="md:hidden flex flex-col gap-3">
+        {rows.map(({ h, m, need, unsure, done }) => (
+          <li key={h.id} className="card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0"><div className="font-medium">{h.name}</div><div className="text-[12.5px] text-muted">from {h.city}, {sideLabel[h.side].toLowerCase()}</div></div>
+              {need.length === 0 ? <Pill tone="warn">Ask family</Pill> : done === need.length ? <Pill tone="good">All placed</Pill> : done ? <Pill tone="warn">{done}/{need.length} placed</Pill> : <Pill tone="bad">None yet</Pill>}
+            </div>
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-[13px]">
+              <div className="panel px-3 py-2"><dt className="text-[12px] text-muted">Stay</dt><dd className="num font-medium">{need[0] ? fmtRange(need[0].stay.checkIn!, need[0].stay.checkOut!) : 'Not sure'}</dd></div>
+              <div className="panel px-3 py-2"><dt className="text-[12px] text-muted">People</dt><dd className="num font-medium">{need.length ? `${need.filter((g) => g.type === 'ADULT').length} adults${need.some((g) => g.type === 'CHILD') ? `, ${need.filter((g) => g.type === 'CHILD').length} kids` : ''}` : `${unsure.length} unsure`}</dd></div>
+            </dl>
+            {m[0].travel.arrivalMode && <div className="mt-2 text-[12.5px] text-muted">Arriving {m[0].travel.arrivalDate?.slice(8)} Dec{m[0].travel.arrivalTime ? ' at ' + m[0].travel.arrivalTime : ''}, {m[0].travel.arrivalNumber ?? m[0].travel.arrivalMode.toLowerCase()}</div>}
+            {need.find((g) => g.stay.special) && <div className="mt-1 text-[12.5px] text-plum">{need.find((g) => g.stay.special)?.stay.special}</div>}
+          </li>
+        ))}
+      </ul>
+      <div className="hidden md:block card overflow-x-auto">
         <table className="w-full text-[13.5px] min-w-[720px]">
           <thead><tr><th className="th">Family</th><th className="th">Side</th><th className="th">Dates</th><th className="th">People</th><th className="th">Arriving</th><th className="th">Special needs</th><th className="th">Rooms</th></tr></thead>
           <tbody>

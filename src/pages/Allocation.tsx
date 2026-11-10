@@ -18,6 +18,7 @@ export default function Allocation() {
   const [selected, setSelected] = useState<string | null>(waiting[0]?.h.id ?? null)
   const sel = waiting.find((w) => w.h.id === selected) ?? waiting[0]
   const issues = conflicts.filter((c) => c.kind !== 'unallocated')
+  const [showAll, setShowAll] = useState(false)
 
   return (
     <>
@@ -27,24 +28,25 @@ export default function Allocation() {
         <section className="card mb-5">
           <div className="px-4 py-3 border-b border-line flex items-center justify-between"><h2 className="font-semibold">Conflicts to resolve</h2><span className="text-[12.5px] text-muted">{issues.filter((c) => c.severity === 'critical').length} serious · {issues.filter((c) => c.severity === 'warning').length} warnings</span></div>
           <ul className="divide-y divide-line">
-            {issues.map((c) => (
-              <li key={c.id} className="flex gap-3 px-4 py-3">
+            {issues.map((c, i) => (
+              <li key={c.id} className={clsx('flex gap-3 px-4 py-3', i >= 3 && !showAll && 'hidden md:flex')}>
                 {c.severity === 'critical' ? <AlertOctagon size={17} className="text-bad mt-0.5 shrink-0" /> : <AlertTriangle size={17} className="text-warn mt-0.5 shrink-0" />}
                 <div className="min-w-0"><div className="font-medium text-[13.5px]">{c.title}</div><div className="text-[12.5px] text-muted">{c.detail}</div></div>
               </li>
             ))}
           </ul>
+          {issues.length > 3 && !showAll && <button className="md:hidden w-full border-t border-line py-3 text-[13.5px] font-medium text-plum" onClick={() => setShowAll(true)}>Show {issues.length - 3} more</button>}
         </section>
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
         <section className="card self-start">
-          <div className="px-4 py-3 border-b border-line"><h2 className="font-semibold">Waiting for a room <span className="text-muted font-normal num">({waiting.length} families)</span></h2></div>
+          <div className="px-4 py-3 border-b border-line"><h2 className="font-semibold">Waiting for a room <span className="text-muted font-normal num">({waiting.length} families)</span></h2><p className="lg:hidden text-[12px] text-muted mt-0.5">Swipe to pick a family</p></div>
           {waiting.length === 0 ? <Empty icon={<CheckCircle2 />} title="Everyone who asked has a room" body="New requests from guest links will appear here." /> : (
-            <ul className="p-2 max-h-[520px] overflow-y-auto">
+            <ul className="p-2 flex gap-2 overflow-x-auto snap-x lg:block lg:max-h-[520px] lg:overflow-y-auto lg:overflow-x-visible">
               {waiting.map(({ h, people }) => (
-                <li key={h.id}>
-                  <button onClick={() => setSelected(h.id)} className={clsx('w-full text-left rounded-lg px-3 py-2.5', sel?.h.id === h.id ? 'bg-plumsoft' : 'hover:bg-sunk')}>
+                <li key={h.id} className="snap-start shrink-0 w-[220px] lg:w-auto">
+                  <button onClick={() => setSelected(h.id)} className={clsx('w-full text-left rounded-2xl px-3 py-3 min-h-[56px] border lg:border-0', sel?.h.id === h.id ? 'bg-plumsoft border-plum/30' : 'border-line hover:bg-sunk')}>
                     <div className="flex justify-between gap-2"><span className="font-medium">{h.name}</span><span className="num text-[13px] text-muted">{people.length}</span></div>
                     <div className="text-[12px] text-muted">{fmtRange(people[0].stay.checkIn!, people[0].stay.checkOut!)} · {sideLabel[h.side]}{people.some((p) => p.stay.special) ? ' · special needs' : ''}</div>
                   </button>
@@ -59,7 +61,32 @@ export default function Allocation() {
 
           <section className="card">
             <div className="px-4 py-3 border-b border-line"><h2 className="font-semibold">Allocated rooms <span className="text-muted font-normal num">({data.allocations.length})</span></h2></div>
-            <div className="overflow-x-auto">
+            <ul className="md:hidden divide-y divide-line">
+              {data.allocations.map((a) => {
+                const flagged = conflicts.filter((c) => c.allocationId === a.id)
+                const rt = data.roomTypes.find((r) => r.id === a.roomTypeId)!
+                return (
+                  <li key={a.id} className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-medium flex items-center gap-1.5">{flagged.some((f) => f.severity === 'critical') ? <AlertOctagon size={14} className="text-bad shrink-0" /> : flagged.length ? <AlertTriangle size={14} className="text-warn shrink-0" /> : null}<span className="truncate">{data.households.find((h) => h.id === a.householdId)?.name}</span></div>
+                        <div className="text-[12.5px] text-muted">{rt.name}, {data.hotels.find((h) => h.id === a.hotelId)?.name}</div>
+                        <div className="text-[12.5px] text-muted num">{fmtRange(a.checkIn, a.checkOut)}, {a.occupantIds.length} of {capacityOf(rt, a.extraBeds)} beds</div>
+                      </div>
+                      <button className="btn-ghost !min-h-[44px] !min-w-[44px] !px-0 shrink-0" aria-label="Remove allocation"
+                        onClick={() => dispatch({ type: 'allocation/remove', id: a.id, actor: 'Ananya Iyer', note: `${data.households.find((h) => h.id === a.householdId)?.name}: removed from ${rt.name}` })}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <select id={`stm-${a.id}`} aria-label="Allocation status" className="input mt-2.5" value={a.status}
+                      onChange={(e) => dispatch({ type: 'allocation/status', id: a.id, status: e.target.value as AllocationStatus })}>
+                      <option value="ASSIGNED">Assigned by you</option><option value="SENT_TO_HOTEL">Sent to hotel</option><option value="HOTEL_CONFIRMED">Hotel confirmed</option><option value="GUEST_NOTIFIED">Guest notified</option>
+                    </select>
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-[13.5px] min-w-[680px]">
                 <thead><tr><th className="th">Family</th><th className="th">Room</th><th className="th">Nights</th><th className="th">People</th><th className="th">Status</th><th className="th" aria-label="Actions" /></tr></thead>
                 <tbody>

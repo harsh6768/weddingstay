@@ -1,6 +1,6 @@
 import { MapPin, Phone, Plus } from 'lucide-react'
 import { BlockPill, PageHeader } from '../components/ui'
-import { roomTypeNights } from '../lib/accommodation'
+import { roomTypeNights, type NightCell } from '../lib/accommodation'
 import { fmtDow, fmtRange, inr, nightsOf } from '../lib/dates'
 import { useStore } from '../store'
 import clsx from 'clsx'
@@ -20,7 +20,7 @@ export default function Hotels() {
           const blocks = data.blocks.filter((b) => b.hotelId === h.id)
           return (
             <section key={h.id} className="card overflow-hidden">
-              <div className="flex flex-wrap items-start justify-between gap-3 p-5 border-b border-line">
+              <div className="flex flex-wrap items-start justify-between gap-3 p-4 md:p-5 border-b border-line">
                 <div className="min-w-0">
                   <h2 className="font-display text-[21px] font-semibold">{h.name}</h2>
                   <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
@@ -31,7 +31,7 @@ export default function Hotels() {
                 <div className="text-[12.5px] text-muted">Check-in {h.checkInTime} · Check-out {h.checkOutTime}</div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-[13.5px] min-w-[720px]">
                   <thead>
                     <tr>
@@ -57,31 +57,40 @@ export default function Hotels() {
                               </div>
                             ))}
                           </td>
-                          {cells.map((c) => {
-                            const offered = c.confirmed + c.held
-                            if (offered === 0 && c.pending === 0) return <td key={c.night} className="td text-center text-muted">—</td>
-                            return (
-                              <td key={c.night} className="td text-center">
-                                {offered > 0 ? (
-                                  <div className={clsx('mx-auto w-[84px] rounded-lg px-2 py-1.5', c.free < 0 ? 'bg-bad/10 text-bad' : c.free === 0 ? 'bg-warn/10 text-warn' : 'bg-good/10 text-good')}>
-                                    <div className="font-semibold num text-[15px]">{c.allocated}/{offered}</div>
-                                    <div className="text-[11px]">{c.free < 0 ? `${-c.free} over` : c.free === 0 ? 'full' : `${c.free} free`}</div>
-                                  </div>
-                                ) : (
-                                  <div className="mx-auto w-[84px] rounded-lg border border-dashed border-line px-2 py-1.5 text-muted">
-                                    <div className="font-semibold num text-[15px]">{c.allocated}/{c.pending}</div>
-                                    <div className="text-[11px]">not held</div>
-                                  </div>
-                                )}
-                              </td>
-                            )
-                          })}
+                          {cells.map((c) => <td key={c.night} className="td text-center"><Cell c={c} /></td>)}
                         </tr>
                       )
                     })}
                   </tbody>
                 </table>
               </div>
+
+              <ul className="md:hidden divide-y divide-line">
+                {types.map((rt) => {
+                  const cells = roomTypeNights(data, rt.id, nights)
+                  const tb = blocks.filter((b) => b.roomTypeId === rt.id)
+                  return (
+                    <li key={rt.id} className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-medium">{rt.name}</div>
+                          <div className="text-[12.5px] text-muted">Sleeps {rt.maxOccupancy}{rt.extraBedCapacity ? ` +${rt.extraBedCapacity}` : ''}, {inr(rt.ratePerNight)} a night</div>
+                        </div>
+                        {tb[0] && <BlockPill s={tb[0].status} />}
+                      </div>
+                      {tb[0] && <div className="mt-1 text-[12px] text-muted num">{tb[0].quantity} rooms, {fmtRange(tb[0].startDate, tb[0].endDate)}{tb[0].confirmationRef ? `, ref ${tb[0].confirmationRef}` : ''}</div>}
+                      <div className="mt-3 grid grid-cols-4 gap-1.5">
+                        {cells.map((c) => (
+                          <div key={c.night} className="min-w-0 text-center">
+                            <div className="text-[11px] text-muted mb-1">{fmtDow(c.night).slice(0, 6)}</div>
+                            <Cell c={c} compact />
+                          </div>
+                        ))}
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
             </section>
           )
         })}
@@ -92,5 +101,24 @@ export default function Hotels() {
         <p className="text-[12.5px] text-muted max-w-[48ch]">Rate × nights for every allocated room, before taxes. Cells show allocated / available rooms per night; dashed cells are planned or requested and not yet held by the hotel.</p>
       </div>
     </>
+  )
+}
+
+function Cell({ c, compact }: { c: NightCell; compact?: boolean }) {
+  const offered = c.confirmed + c.held
+  const box = compact ? 'w-full rounded-xl px-1 py-2' : 'mx-auto w-[84px] rounded-xl px-2 py-1.5'
+  if (offered === 0 && c.pending === 0) return <div className={clsx(box, 'text-muted bg-sunk/60')}>—</div>
+  if (offered === 0)
+    return (
+      <div className={clsx(box, 'border border-dashed border-line text-muted')}>
+        <div className="font-semibold num text-[15px]">{c.allocated}/{c.pending}</div>
+        <div className="text-[11px]">not held</div>
+      </div>
+    )
+  return (
+    <div className={clsx(box, c.free < 0 ? 'bg-bad/10 text-bad' : c.free === 0 ? 'bg-warn/10 text-warn' : 'bg-good/10 text-good')}>
+      <div className="font-semibold num text-[15px]">{c.allocated}/{offered}</div>
+      <div className="text-[11px]">{c.free < 0 ? `${-c.free} over` : c.free === 0 ? 'full' : `${c.free} free`}</div>
+    </div>
   )
 }

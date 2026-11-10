@@ -10,7 +10,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
         <h1 className="font-display text-[30px] md:text-[38px] leading-[1.05] font-semibold text-ink">{title}</h1>
         {subtitle && <p className="mt-1 text-muted text-[14px] max-w-[65ch]">{subtitle}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="flex w-full sm:w-auto gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap [&>*]:shrink-0">{actions}</div>}
     </div>
   )
 }
@@ -133,7 +133,7 @@ export function Empty({ icon, title, body, action }: { icon: ReactNode; title: s
 
 export function SampleBanner() {
   return (
-    <div className="rounded-full border border-marigold/35 bg-marigold/10 px-4 py-1.5 text-[12.5px] text-ink inline-flex">
+    <div className="rounded-2xl sm:rounded-full border border-marigold/35 bg-marigold/10 px-4 py-2 sm:py-1.5 text-[12.5px] text-ink inline-block">
       <span className="font-semibold">Sample data.</span> &nbsp;Names and bookings are made up. Changes reset when you reload.
     </div>
   )
