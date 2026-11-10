@@ -18,7 +18,16 @@ Requires Node 20+.
 
 ## Deploy on Netlify
 
-`netlify.toml` is set up: Netlify runs `npm run build` and publishes `dist/`. In Netlify choose **Add new site → Import an existing project → GitHub → harsh6768/weddingstay**, keep the detected settings, and deploy. Every push to `main` redeploys. Routes use `#/…` URLs, so no redirect rules are needed.
+Pushes to `main` deploy automatically through GitHub Actions (`.github/workflows/deploy.yml`): it installs, runs the tests, builds, and publishes `dist/` to Netlify. Pull requests get the tests and build only.
+
+One-time setup:
+
+1. In Netlify, create an empty site (**Add new site → Deploy manually**, or `npx netlify-cli sites:create`), then copy its **Site ID** from Site configuration → General.
+2. Create a personal access token under Netlify **User settings → Applications → Personal access tokens**.
+3. In GitHub, **Settings → Secrets and variables → Actions**, add `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN`.
+4. Re-run the latest "Test and deploy" run, or push to `main`.
+
+`netlify.toml` holds the cache and security headers. Routes use `#/…` URLs, so no redirect rules are needed. Don't also link the repo in Netlify's own Git settings, or every push deploys twice.
 
 ## What's in the prototype
 
