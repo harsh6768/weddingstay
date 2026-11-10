@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Mark } from '../components/AppShell'
+import { GoldDivider, Mandala, Toran } from '../components/Ornaments'
 import type { Guest, NeedsRoom, Rsvp, TravelMode } from '../data/types'
 import { fmtDow, fmtTime } from '../lib/dates'
 import { useStore } from '../store'
@@ -12,16 +13,26 @@ const steps = ['Your family', 'Functions', 'Travel', 'Stay', 'Finish']
 
 export function GuestFrame({ children }: { children: React.ReactNode }) {
   const { data } = useStore()
+  const bride = data.wedding.brideName.split(' ')[0]
+  const groom = data.wedding.groomName.split(' ')[0]
   return (
-    <div className="min-h-full bg-bg">
-      <div className="glow" style={gutter}>
-        <div className="mx-auto max-w-[560px] pt-8 pb-4">
-          <div className="flex items-center gap-2 text-[12.5px] text-muted"><Mark className="h-5 w-5" /> A private link from the couple</div>
-          <div className="mt-4 font-display text-[44px] sm:text-[52px] font-semibold leading-[0.95]">{data.wedding.brideName.split(' ')[0]} &amp; {data.wedding.groomName.split(' ')[0]}</div>
-          <div className="mt-2 text-[15px] text-muted">{data.wedding.venueName}, {data.wedding.city}. 11 to 13 December 2026</div>
+    <div className="invite min-h-screen overflow-x-hidden">
+      <div className="mx-auto max-w-[720px]"><Toran /></div>
+      <header className="relative text-center" style={gutter}>
+        <Mandala className="pointer-events-none absolute left-1/2 top-[-40px] -z-0 h-[340px] w-[340px] -translate-x-1/2 opacity-[0.16]" />
+        <div className="relative mx-auto max-w-[560px] pt-2 pb-4">
+          <div className="font-serif italic text-[15px] text-muted">Together with their families</div>
+          <h1 className="mt-1 font-script !font-normal text-[56px] sm:text-[68px] leading-[1.05] text-plum" style={{ fontFamily: '"Great Vibes", cursive' }}>
+            {bride} <span className="font-serif italic text-[34px] sm:text-[40px] text-[rgb(var(--gold))] align-middle">&amp;</span> {groom}
+          </h1>
+          <div className="font-serif italic text-[16px] text-ink/80">request the pleasure of your company</div>
+          <GoldDivider className="mx-auto mt-3 h-6 w-[200px]" />
+          <div className="mt-2 font-serif text-[19px] font-semibold tracking-[0.12em] uppercase text-ink">11 · 12 · 13 December 2026</div>
+          <div className="mt-0.5 font-serif text-[16px] text-muted">{data.wedding.venueName}, {data.wedding.city}</div>
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--gold)/0.4)] bg-surface/70 px-3 py-1 text-[12px] text-muted"><Mark className="h-4 w-4" /> A private link for your family</div>
         </div>
-      </div>
-      <div className="mx-auto max-w-[560px] py-5 pb-16" style={gutter}>{children}</div>
+      </header>
+      <div className="relative mx-auto max-w-[560px] py-5 pb-16" style={gutter}>{children}</div>
     </div>
   )
 }
@@ -31,7 +42,7 @@ function Choice<T extends string>({ value, options, onChange, name }: { value: T
     <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }} role="radiogroup" aria-label={name}>
       {options.map((o) => (
         <button key={o.v} type="button" role="radio" aria-checked={value === o.v} onClick={() => onChange(o.v)}
-          className={clsx('rounded-full border px-2 py-2.5 text-[14px] font-medium min-h-[46px] transition-colors', value === o.v ? 'border-plum bg-plum text-onplum' : 'border-line bg-surface text-ink hover:bg-sunk')}>
+          className={clsx('rounded-full border px-2 py-2.5 text-[14px] font-medium min-h-[46px] transition-colors', value === o.v ? 'border-plum bg-plum text-onplum shadow-[0_0_0_1px_rgb(var(--gold)/0.6)_inset]' : 'border-[rgb(var(--gold)/0.35)] bg-surface text-ink hover:bg-sunk')}>
           {o.label}
         </button>
       ))}
@@ -75,14 +86,14 @@ export default function GuestForm() {
   return (
     <GuestFrame>
       <div className="mb-5">
-        <div className="flex gap-1.5" aria-hidden="true">{steps.map((s, i) => <div key={s} className={clsx('h-1.5 flex-1 rounded-full', i <= step ? 'bg-plum' : 'bg-line')} />)}</div>
-        <div className="mt-2 text-[12.5px] text-muted">Step {step + 1} of 5 · {steps[step]}</div>
+        <div className="flex gap-1.5" aria-hidden="true">{steps.map((s, i) => <div key={s} className={clsx('h-1.5 flex-1 rounded-full', i < step ? 'bg-plum' : i === step ? 'bg-[rgb(var(--gold))]' : 'bg-line')} />)}</div>
+        <div className="mt-2 font-serif italic text-[14px] text-muted">Step {step + 1} of 5 · {steps[step]}</div>
       </div>
 
       {step === 0 && (
         <section className="flex flex-col gap-4">
           <div>
-            <h1 className="font-display text-[28px] leading-tight font-semibold">Namaste {lead.firstName}, who from the {household.name.replace(/ \(.*\)/, '')} is coming?</h1>
+            <h1 className="font-display text-[30px] leading-[1.1] font-semibold">Namaste {lead.firstName}, who from the {household.name.replace(/ \(.*\)/, '')} is coming?</h1>
             <p className="mt-1 text-muted">You can answer for everyone in your family. Each person's reply is kept separately.</p>
           </div>
           {people.map((p) => (
@@ -98,7 +109,7 @@ export default function GuestForm() {
 
       {step === 1 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[28px] leading-tight font-semibold">Which functions will you attend?</h1><p className="mt-1 text-muted">Tap a name to change it for that person.</p></div>
+          <div><h1 className="font-display text-[30px] leading-[1.1] font-semibold">Which functions will you attend?</h1><p className="mt-1 text-muted">Tap a name to change it for that person.</p></div>
           {fns.map((f) => (
             <div key={f.id} className="card p-4">
               <div className="flex items-baseline justify-between gap-2"><div className="font-semibold text-[16px]">{f.name}</div><div className="text-[12.5px] text-muted">{fmtDow(f.date)}, {fmtTime(f.startTime)}</div></div>
@@ -108,7 +119,7 @@ export default function GuestForm() {
                   const on = (p.attendance[f.id] ?? 'PENDING') === 'YES'
                   return (
                     <button key={p.id} type="button" aria-pressed={on} onClick={() => set(p.id, { attendance: { ...p.attendance, [f.id]: on ? 'NO' : 'YES' } })}
-                      className={clsx('inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[13.5px] min-h-[40px]', on ? 'border-good/40 bg-good/10 text-good' : 'border-line bg-surface text-muted')}>
+                      className={clsx('inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[13.5px] min-h-[40px]', on ? 'border-plum/40 bg-plumsoft text-plum' : 'border-[rgb(var(--gold)/0.35)] bg-surface text-muted')}>
                       {on && <Check size={14} />}{p.firstName}
                     </button>
                   )
@@ -121,7 +132,7 @@ export default function GuestForm() {
 
       {step === 2 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[28px] leading-tight font-semibold">How are you travelling to Udaipur?</h1><p className="mt-1 text-muted">Rough times are fine. You can update this later from the same link.</p></div>
+          <div><h1 className="font-display text-[30px] leading-[1.1] font-semibold">How are you travelling to Udaipur?</h1><p className="mt-1 text-muted">Rough times are fine. You can update this later from the same link.</p></div>
           <div className="card p-4 flex flex-col gap-4">
             <div><label htmlFor="dep-city" className="label">Travelling from</label><input id="dep-city" className="input" value={travel.departureCity ?? household.city} onChange={(e) => setTravel({ departureCity: e.target.value })} /></div>
             <div>
@@ -146,7 +157,7 @@ export default function GuestForm() {
 
       {step === 3 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[28px] leading-tight font-semibold">Do you need a place to stay?</h1><p className="mt-1 text-muted">The couple is arranging rooms for outstation guests. They'll confirm your room before the wedding.</p></div>
+          <div><h1 className="font-display text-[30px] leading-[1.1] font-semibold">Do you need a place to stay?</h1><p className="mt-1 text-muted">The couple is arranging rooms for outstation guests. They'll confirm your room before the wedding.</p></div>
           <div className="card p-4 flex flex-col gap-4">
             <Choice name="Need accommodation" value={stay.needs} onChange={(v: NeedsRoom) => setStay({ needs: v, ...(v === 'YES' && !stay.checkIn ? { checkIn: travel.arrivalDate ?? '2026-12-11', checkOut: travel.departureDate ?? '2026-12-14' } : {}) })}
               options={[{ v: 'YES', label: 'Yes please' }, { v: 'NO', label: 'No' }, { v: 'UNSURE', label: 'Not sure' }]} />
@@ -167,7 +178,7 @@ export default function GuestForm() {
 
       {step === 4 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[28px] leading-tight font-semibold">Almost done</h1></div>
+          <div><h1 className="font-display text-[30px] leading-[1.1] font-semibold">Almost done</h1></div>
           <div className="card p-4 text-[14px] flex flex-col gap-1.5">
             <div><span className="font-semibold">{people.filter((p) => p.rsvp === 'YES').length}</span> coming{people.some((p) => p.rsvp === 'MAYBE') ? `, ${people.filter((p) => p.rsvp === 'MAYBE').length} maybe` : ''}{people.some((p) => p.rsvp === 'NO') ? `, ${people.filter((p) => p.rsvp === 'NO').length} can’t make it` : ''}</div>
             {anyComing && travel.arrivalDate && <div className="text-muted">Arriving {fmtDow(travel.arrivalDate)}{travel.arrivalTime ? `, ${fmtTime(travel.arrivalTime)}` : ''}{travel.arrivalNumber ? ` on ${travel.arrivalNumber}` : ''}</div>}

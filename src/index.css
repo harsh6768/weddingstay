@@ -13,6 +13,7 @@
   --plum: 212 46 104; --onplum: 255 255 255; --plumsoft: 252 232 240; --marigold: 226 142 24;
   --good: 20 136 88; --warn: 190 116 8; --bad: 204 44 60; --info: 58 96 214;
   --glow-a: 212 46 104; --glow-b: 240 160 40;
+  --gold: 178 134 40;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -56,6 +57,23 @@ h1, h2, h3 { text-wrap: balance; }
 .rise { animation: rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
 .fill { transform-origin: left; animation: fill 0.6s cubic-bezier(.2,.7,.2,1) both; }
 @media (prefers-reduced-motion: reduce) { *, *::before { transition: none !important; animation: none !important; } }
+
+/* Guest pages: a printed-invitation look, the same in light and dark (a deliberate single theme). */
+.invite {
+  --bg: 251 246 238; --surface: 255 252 246; --sunk: 245 236 222;
+  --ink: 62 16 30; --muted: 122 88 84; --line: 232 214 190;
+  --plum: 128 22 48; --onplum: 255 247 232; --plumsoft: 247 226 222;
+  --marigold: 222 140 26; --gold: 176 132 38;
+  --good: 46 120 70; --warn: 176 110 10; --bad: 176 36 46; --info: 60 90 160;
+  color-scheme: light; font-variant-numeric: lining-nums;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgb(255 236 200 / 0.55), transparent 60%),
+    rgb(var(--bg));
+  color: rgb(var(--ink));
+}
+.invite .card { @apply rounded-[18px] shadow-[0_1px_0_rgb(255_255_255/0.8)_inset,0_10px_30px_-20px_rgb(90_30_20/0.35)]; border-color: rgb(var(--gold) / 0.35); }
+.invite .btn-primary { background: linear-gradient(180deg, rgb(150 30 58), rgb(var(--plum))); box-shadow: 0 0 0 1px rgb(var(--gold) / 0.55) inset, 0 10px 22px -10px rgb(var(--plum) / 0.6); }
+.invite h1, .invite h2 { font-family: "Cormorant Garamond", Georgia, serif; letter-spacing: 0; font-weight: 600; }
 
 @layer components {
   .card { @apply bg-surface border border-line rounded-[20px] shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-18px_rgb(var(--ink)/0.18)]; }

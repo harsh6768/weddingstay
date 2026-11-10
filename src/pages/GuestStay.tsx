@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { fmtDow, fmtTime } from '../lib/dates'
 import { useStore } from '../store'
 import { GuestFrame } from './GuestForm'
+import { GoldDivider } from '../components/Ornaments'
 
 export function GuestDone() {
   const { householdId = 'h02' } = useParams()
@@ -11,8 +12,9 @@ export function GuestDone() {
   return (
     <GuestFrame>
       <div className="card p-6 text-center">
-        <CheckCircle2 className="mx-auto text-good" size={36} />
-        <h1 className="mt-3 font-display text-[28px] leading-tight font-semibold">Thank you, we've got it</h1>
+        <div className="font-script text-[44px] leading-none text-plum" style={{ fontFamily: '"Great Vibes", cursive' }}>Dhanyavaad</div>
+        <GoldDivider className="mx-auto mt-2 h-6 w-[180px]" />
+        <h1 className="mt-2 text-[30px] leading-tight">Thank you, we've got it</h1>
         <p className="mt-1 text-muted">Ananya &amp; Rohan can now see your family's reply. Open this same link anytime before 25 Nov to make changes.</p>
         <div className="mt-5 flex flex-col gap-2">
           <Link to={`/g/${householdId}/stay`} className="btn-primary">See your stay and schedule</Link>
@@ -35,7 +37,7 @@ export default function GuestStay() {
 
   return (
     <GuestFrame>
-      <h1 className="font-display text-[28px] leading-tight font-semibold mb-4">Your stay, {h?.name.replace(/ \(.*\)/, '')}</h1>
+      <h1 className="text-[30px] leading-tight mb-4 text-center">Your stay, {h?.name.replace(/ \(.*\)/, '')}</h1>
       {rooms.length === 0 ? (
         <div className="card p-5">
           <div className="flex items-center gap-2 font-semibold"><Clock size={18} className="text-warn" /> Your room isn't confirmed yet</div>
@@ -48,7 +50,7 @@ export default function GuestStay() {
           <div key={a.id} className="card overflow-hidden mb-4">
             <div className="px-5 py-3 bg-good/10 border-b border-good/20 text-good text-[13px] font-semibold flex items-center gap-2"><CheckCircle2 size={16} /> Confirmed by the hotel</div>
             <div className="p-5">
-              <div className="font-display text-[21px] font-semibold">{hotel.name}</div>
+              <div className="font-serif text-[24px] font-semibold leading-tight">{hotel.name}</div>
               <div className="text-muted">{rt.name}</div>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-sunk p-3"><div className="eyebrow">Check-in</div><div className="mt-1 font-semibold">{fmtDow(a.checkIn)}</div><div className="text-[12.5px] text-muted">from {fmtTime(hotel.checkInTime)}</div></div>
@@ -64,12 +66,19 @@ export default function GuestStay() {
         )
       })}
 
-      <h2 className="mt-6 mb-3 font-display text-[20px] font-semibold">Schedule</h2>
+      <div className="mt-8 text-center"><h2 className="text-[26px]">The celebrations</h2><GoldDivider className="mx-auto mt-1 h-6 w-[180px]" /></div>
       <ol className="card divide-y divide-line">
         {fns.map((f) => (
-          <li key={f.id} className="p-4">
-            <div className="flex items-baseline justify-between gap-2"><div className="font-semibold">{f.name}</div><div className="text-[12.5px] text-muted">{fmtDow(f.date)}, {fmtTime(f.startTime)}</div></div>
-            <div className="text-[13px] text-muted">{f.venueName}{f.dressCode ? ` · Dress: ${f.dressCode}` : ''}</div>
+          <li key={f.id} className="p-4 flex gap-4 items-center">
+            <div className="w-[60px] shrink-0 text-center border-r border-[rgb(var(--gold)/0.35)] pr-3">
+              <div className="font-serif text-[26px] font-semibold leading-none text-plum">{f.date.slice(8)}</div>
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted mt-1">Dec</div>
+            </div>
+            <div className="min-w-0">
+              <div className="font-serif text-[20px] font-semibold leading-tight">{f.name}</div>
+              <div className="text-[13px] text-muted">{fmtDow(f.date)}, {fmtTime(f.startTime)} · {f.venueName}</div>
+              {f.dressCode && <div className="text-[12.5px] text-[rgb(var(--gold))] italic font-serif">Dress: {f.dressCode}</div>}
+            </div>
           </li>
         ))}
       </ol>
