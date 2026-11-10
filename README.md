@@ -16,6 +16,10 @@ npm run build:preview  # one self-contained HTML file in dist-preview/
 
 Requires Node 20+.
 
+## Deploy on Netlify
+
+`netlify.toml` is set up: Netlify runs `npm run build` and publishes `dist/`. In Netlify choose **Add new site → Import an existing project → GitHub → harsh6768/weddingstay**, keep the detected settings, and deploy. Every push to `main` redeploys. Routes use `#/…` URLs, so no redirect rules are needed.
+
 ## What's in the prototype
 
 | Area | Screens |
