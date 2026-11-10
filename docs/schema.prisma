@@ -1,0 +1,540 @@
+// WeddingStay MVP — initial relational schema (draft for review, Milestone 0)
+// PostgreSQL + Prisma. Conventions:
+// - Every wedding-owned row carries wedding_id (directly or via parent) for isolation.
+// - Timestamps are UTC (timestamptz); stay/night fields are @db.Date.
+// - Stays: check-in included, check-out excluded (10 Dec -> 12 Dec = nights of 10 and 11 Dec).
+// - Guest data is soft-deleted via archived_at; no hard deletes until a retention flow exists.
+// - Hotel status (RoomBlock.status) and internal allocation status (RoomAllocation.status) are separate.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────── Identity & workspace ─────────────
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String?
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  memberships   WeddingMember[]
+  ownedWeddings Wedding[]       @relation("WeddingOwner")
+  // Auth.js tables (Account, Session, VerificationToken) are added in Milestone 1.
+
+  @@map("users")
+}
+
+enum WeddingStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Wedding {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  brideName   String        @map("bride_name")
+  groomName   String        @map("groom_name")
+  city        String
+  venueName   String?       @map("venue_name")
+  startDate   DateTime      @map("start_date") @db.Date
+  endDate     DateTime      @map("end_date") @db.Date // CHECK end_date >= start_date (raw SQL migration)
+  timezone    String        @default("Asia/Kolkata")
+  ownerUserId String        @map("owner_user_id") @db.Uuid
+  status      WeddingStatus @default(ACTIVE)
+  responseDeadline DateTime? @map("response_deadline") @db.Timestamptz
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  owner      User              @relation("WeddingOwner", fields: [ownerUserId], references: [id])
+  members    WeddingMember[]
+  functions  WeddingFunction[]
+  households Household[]
+  guests     Guest[]
+  links      InvitationLink[]
+  hotels     Hotel[]
+  auditEvents AuditEvent[]
+
+  @@map("weddings")
+}
+
+enum MemberRole {
+  OWNER
+  COORDINATOR
+}
+
+enum MemberStatus {
+  INVITED
+  ACTIVE
+  REMOVED
+}
+
+model WeddingMember {
+  id         String       @id @default(uuid()) @db.Uuid
+  weddingId  String       @map("wedding_id") @db.Uuid
+  userId     String?      @map("user_id") @db.Uuid // null until invite accepted
+  invitedEmail String     @map("invited_email")
+  role       MemberRole
+  status     MemberStatus @default(INVITED)
+  invitedAt  DateTime     @default(now()) @map("invited_at") @db.Timestamptz
+  acceptedAt DateTime?    @map("accepted_at") @db.Timestamptz
+
+  wedding    Wedding     @relation(fields: [weddingId], references: [id])
+  user       User?       @relation(fields: [userId], references: [id])
+  households Household[] @relation("HouseholdCoordinator") // coordinator scope = assigned households
+
+  @@unique([weddingId, invitedEmail])
+  @@map("wedding_members")
+}
+
+// ───────────── Functions ─────────────
+
+model WeddingFunction {
+  id           String    @id @default(uuid()) @db.Uuid
+  weddingId    String    @map("wedding_id") @db.Uuid
+  name         String
+  description  String?
+  venueName    String?   @map("venue_name")
+  venueAddress String?   @map("venue_address")
+  startsAt     DateTime  @map("starts_at") @db.Timestamptz
+  endsAt       DateTime? @map("ends_at") @db.Timestamptz
+  dressCode    String?   @map("dress_code")
+  isPublished  Boolean   @default(false) @map("is_published")
+  rsvpRequired Boolean   @default(true) @map("rsvp_required")
+  sortOrder    Int       @default(0) @map("sort_order")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  wedding     Wedding              @relation(fields: [weddingId], references: [id])
+  attendances FunctionAttendance[]
+
+  @@index([weddingId])
+  @@map("wedding_functions")
+}
+
+// ───────────── Guests & households ─────────────
+
+enum Side {
+  BRIDE
+  GROOM
+  MUTUAL
+  OTHER
+}
+
+model Household {
+  id                    String   @id @default(uuid()) @db.Uuid
+  weddingId             String   @map("wedding_id") @db.Uuid
+  name                  String
+  side                  Side
+  coordinatorMemberId   String?  @map("coordinator_member_id") @db.Uuid
+  primaryContactGuestId String?  @unique @map("primary_contact_guest_id") @db.Uuid
+  address               String?
+  notes                 String?
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  archivedAt            DateTime? @map("archived_at") @db.Timestamptz
+
+  wedding        Wedding          @relation(fields: [weddingId], references: [id])
+  coordinator    WeddingMember?   @relation("HouseholdCoordinator", fields: [coordinatorMemberId], references: [id])
+  primaryContact Guest?           @relation("HouseholdPrimaryContact", fields: [primaryContactGuestId], references: [id])
+  guests         Guest[]          @relation("HouseholdMembers")
+  links          InvitationLink[]
+  allocations    RoomAllocation[]
+
+  @@index([weddingId])
+  @@map("households")
+}
+
+enum GuestType {
+  ADULT
+  CHILD
+  OTHER
+}
+
+enum InvitedStatus {
+  DRAFT
+  INVITED
+  NOT_INVITED
+}
+
+model Guest {
+  id                String        @id @default(uuid()) @db.Uuid
+  weddingId         String        @map("wedding_id") @db.Uuid
+  householdId       String?       @map("household_id") @db.Uuid // one primary household in MVP
+  firstName         String        @map("first_name")
+  lastName          String?       @map("last_name")
+  displayName       String?       @map("display_name")
+  phone             String?       // E.164, optional until needed
+  email             String?
+  guestType         GuestType     @default(ADULT) @map("guest_type")
+  side              Side
+  relationshipLabel String?       @map("relationship_label")
+  tags              String[]      @default([]) // VIP, elderly, child, friend, colleague...
+  invitedStatus     InvitedStatus @default(DRAFT) @map("invited_status")
+  notes             String?       // private to authorised wedding users
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  archivedAt        DateTime?     @map("archived_at") @db.Timestamptz
+
+  wedding           Wedding              @relation(fields: [weddingId], references: [id])
+  household         Household?           @relation("HouseholdMembers", fields: [householdId], references: [id])
+  primaryContactOf  Household?           @relation("HouseholdPrimaryContact")
+  rsvp              GuestResponse?
+  attendances       FunctionAttendance[]
+  stay              StayRequirement?
+  travel            TravelDetail?
+  occupancies       AllocationOccupant[]
+  links             InvitationLink[]
+
+  @@index([weddingId, householdId])
+  @@index([weddingId, phone])
+  @@index([weddingId, email])
+  @@map("guests")
+}
+
+// ───────────── Imports ─────────────
+
+enum ImportStatus {
+  UPLOADED
+  MAPPED
+  PREVIEWED
+  COMMITTED
+  FAILED
+}
+
+model GuestImport {
+  id          String       @id @default(uuid()) @db.Uuid
+  weddingId   String       @map("wedding_id") @db.Uuid
+  createdBy   String       @map("created_by") @db.Uuid
+  fileName    String       @map("file_name")
+  status      ImportStatus @default(UPLOADED)
+  mapping     Json?        // { sourceColumn: targetField }
+  rows        Json?        // parsed rows + row-level errors + duplicate candidates
+  summary     Json?        // counts: created, skipped, failed
+  idempotencyKey String?   @unique @map("idempotency_key")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  committedAt DateTime?    @map("committed_at") @db.Timestamptz
+
+  @@index([weddingId])
+  @@map("guest_imports")
+}
+
+// ───────────── Invitation links & responses ─────────────
+
+enum LinkType {
+  HOUSEHOLD
+  INDIVIDUAL
+  VIEW_ONLY
+}
+
+enum LinkStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum InvitationState {
+  NOT_SENT
+  SENT        // shared via WhatsApp/copy, or marked sent manually
+  STARTED
+  SUBMITTED
+  UPDATED
+  DECLINED
+  EXPIRED
+}
+
+model InvitationLink {
+  id           String          @id @default(uuid()) @db.Uuid
+  weddingId    String          @map("wedding_id") @db.Uuid
+  householdId  String?         @map("household_id") @db.Uuid // CHECK exactly one of household_id / guest_id unless VIEW_ONLY
+  guestId      String?         @map("guest_id") @db.Uuid
+  tokenHash    String          @unique @map("token_hash") // SHA-256 of a 32-byte random token; raw token never stored
+  linkType     LinkType        @map("link_type")
+  status       LinkStatus      @default(ACTIVE)
+  state        InvitationState @default(NOT_SENT)
+  expiresAt    DateTime?       @map("expires_at") @db.Timestamptz
+  lockedAt     DateTime?       @map("locked_at") @db.Timestamptz // couple locked responses
+  sentAt       DateTime?       @map("sent_at") @db.Timestamptz
+  createdBy    String          @map("created_by") @db.Uuid
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  lastUsedAt   DateTime?       @map("last_used_at") @db.Timestamptz
+
+  wedding   Wedding    @relation(fields: [weddingId], references: [id])
+  household Household? @relation(fields: [householdId], references: [id])
+  guest     Guest?     @relation(fields: [guestId], references: [id])
+
+  @@index([weddingId, state])
+  @@map("invitation_links")
+}
+
+enum RsvpStatus {
+  YES
+  NO
+  MAYBE
+  PENDING
+}
+
+enum ResponseSource {
+  GUEST_LINK
+  COUPLE_EDIT
+  COORDINATOR_EDIT
+}
+
+// Overall RSVP per guest (current state). History lives in AuditEvent.
+model GuestResponse {
+  id                 String         @id @default(uuid()) @db.Uuid
+  weddingId          String         @map("wedding_id") @db.Uuid
+  guestId            String         @unique @map("guest_id") @db.Uuid
+  status             RsvpStatus     @default(PENDING)
+  submittedByGuestId String?        @map("submitted_by_guest_id") @db.Uuid // household representative
+  source             ResponseSource
+  dietaryPreference  String?        @map("dietary_preference")
+  messageToCouple    String?        @map("message_to_couple")
+  consentAt          DateTime?      @map("consent_at") @db.Timestamptz
+  submittedAt        DateTime?      @map("submitted_at") @db.Timestamptz
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  guest Guest @relation(fields: [guestId], references: [id])
+
+  @@index([weddingId, status])
+  @@map("guest_responses")
+}
+
+model FunctionAttendance {
+  id                String     @id @default(uuid()) @db.Uuid
+  weddingFunctionId String     @map("wedding_function_id") @db.Uuid
+  guestId           String     @map("guest_id") @db.Uuid
+  status            RsvpStatus @default(PENDING)
+  updatedAt         DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  function WeddingFunction @relation(fields: [weddingFunctionId], references: [id])
+  guest    Guest           @relation(fields: [guestId], references: [id])
+
+  @@unique([weddingFunctionId, guestId])
+  @@map("function_attendance")
+}
+
+enum TravelMode {
+  FLIGHT
+  TRAIN
+  BUS
+  CAR
+  OTHER
+}
+
+model TravelDetail {
+  id                String      @id @default(uuid()) @db.Uuid
+  weddingId         String      @map("wedding_id") @db.Uuid
+  guestId           String      @unique @map("guest_id") @db.Uuid
+  departureCity     String?     @map("departure_city")
+  arrivalDate       DateTime?   @map("arrival_date") @db.Date
+  arrivalTime       String?     @map("arrival_time") // "HH:mm" local, optional: guests may not know
+  arrivalMode       TravelMode? @map("arrival_mode")
+  arrivalLocation   String?     @map("arrival_location") // airport / station
+  arrivalNumber     String?     @map("arrival_number") // flight/train number
+  departureDate     DateTime?   @map("departure_date") @db.Date
+  departureTime     String?     @map("departure_time")
+  departureLocation String?     @map("departure_location")
+  notes             String?
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  guest Guest @relation(fields: [guestId], references: [id])
+
+  @@map("travel_details")
+}
+
+enum NeedsAccommodation {
+  YES
+  NO
+  UNSURE
+}
+
+enum StayStatus {
+  INCOMPLETE
+  SUBMITTED
+  UPDATED
+  CANCELLED
+}
+
+// What the guest asked for. Independent of any room allocation.
+model StayRequirement {
+  id                  String             @id @default(uuid()) @db.Uuid
+  weddingId           String             @map("wedding_id") @db.Uuid
+  guestId             String             @unique @map("guest_id") @db.Uuid
+  needsAccommodation  NeedsAccommodation @map("needs_accommodation")
+  checkInDate         DateTime?          @map("check_in_date") @db.Date
+  checkOutDate        DateTime?          @map("check_out_date") @db.Date // CHECK check_out_date > check_in_date
+  preferredRoomTypeId String?            @map("preferred_room_type_id") @db.Uuid
+  specialRequirement  String?            @map("special_requirement")
+  status              StayStatus         @default(INCOMPLETE)
+  updatedAt           DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  guest Guest @relation(fields: [guestId], references: [id])
+
+  @@index([weddingId, needsAccommodation])
+  @@map("stay_requirements")
+}
+
+// ───────────── Accommodation ─────────────
+
+model Hotel {
+  id           String   @id @default(uuid()) @db.Uuid
+  weddingId    String   @map("wedding_id") @db.Uuid
+  name         String
+  address      String?
+  mapUrl       String?  @map("map_url")
+  contactName  String?  @map("contact_name")
+  contactPhone String?  @map("contact_phone")
+  contactEmail String?  @map("contact_email")
+  bookingRef   String?  @map("booking_ref")
+  checkInPolicy  String? @map("check_in_policy")
+  checkOutPolicy String? @map("check_out_policy")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  wedding     Wedding          @relation(fields: [weddingId], references: [id])
+  roomTypes   RoomType[]
+  blocks      RoomBlock[]
+  allocations RoomAllocation[]
+
+  @@index([weddingId])
+  @@map("hotels")
+}
+
+model RoomType {
+  id               String   @id @default(uuid()) @db.Uuid
+  hotelId          String   @map("hotel_id") @db.Uuid
+  name             String
+  maxOccupancy     Int      @map("max_occupancy") // CHECK > 0
+  standardAdults   Int      @map("standard_adults")
+  standardChildren Int      @default(0) @map("standard_children")
+  extraBedAllowed  Boolean  @default(false) @map("extra_bed_allowed")
+  extraBedCapacity Int      @default(0) @map("extra_bed_capacity")
+  ratePerNight     Decimal? @map("rate_per_night") @db.Decimal(10, 2) // INR
+  notes            String?
+
+  hotel       Hotel            @relation(fields: [hotelId], references: [id])
+  blocks      RoomBlock[]
+  allocations RoomAllocation[]
+
+  @@map("room_types")
+}
+
+// Hotel-side status. Only HELD and CONFIRMED count as allocatable inventory;
+// PLANNED and REQUESTED are shown separately on the dashboard.
+enum BlockStatus {
+  PLANNED
+  REQUESTED
+  HELD
+  CONFIRMED
+  RELEASED
+  CANCELLED
+}
+
+// N rooms of one type for a date range. Night-wise availability is computed.
+model RoomBlock {
+  id                    String      @id @default(uuid()) @db.Uuid
+  hotelId               String      @map("hotel_id") @db.Uuid
+  roomTypeId            String      @map("room_type_id") @db.Uuid
+  startDate             DateTime    @map("start_date") @db.Date // first night
+  endDate               DateTime    @map("end_date") @db.Date   // checkout day (exclusive)
+  quantity              Int         // CHECK >= 0
+  complimentaryCount    Int         @default(0) @map("complimentary_count")
+  status                BlockStatus @default(PLANNED)
+  confirmationReference String?     @map("confirmation_reference")
+  lastConfirmedAt       DateTime?   @map("last_confirmed_at") @db.Timestamptz
+  rateNotes             String?     @map("rate_notes")
+  notes                 String?
+
+  hotel    Hotel    @relation(fields: [hotelId], references: [id])
+  roomType RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@index([hotelId, roomTypeId])
+  @@map("room_blocks")
+}
+
+// Internal assignment status. Never implies the hotel has confirmed.
+enum AllocationStatus {
+  SUGGESTED
+  ASSIGNED
+  SENT_TO_HOTEL
+  HOTEL_CONFIRMED
+  GUEST_NOTIFIED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+// One allocated room-unit of a room type for a date range (no physical room number in MVP).
+model RoomAllocation {
+  id                 String           @id @default(uuid()) @db.Uuid
+  weddingId          String           @map("wedding_id") @db.Uuid
+  hotelId            String           @map("hotel_id") @db.Uuid
+  roomTypeId         String           @map("room_type_id") @db.Uuid
+  householdId        String?          @map("household_id") @db.Uuid
+  checkInDate        DateTime         @map("check_in_date") @db.Date
+  checkOutDate       DateTime         @map("check_out_date") @db.Date // CHECK > check_in_date
+  extraBedCount      Int              @default(0) @map("extra_bed_count")
+  status             AllocationStatus @default(ASSIGNED)
+  publishedToGuestAt DateTime?        @map("published_to_guest_at") @db.Timestamptz
+  confirmedByHotelAt DateTime?        @map("confirmed_by_hotel_at") @db.Timestamptz
+  guestNotifiedAt    DateTime?        @map("guest_notified_at") @db.Timestamptz
+  overrideReason     String?          @map("override_reason") // required when a warning was overridden
+  notes              String?
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  hotel     Hotel                @relation(fields: [hotelId], references: [id])
+  roomType  RoomType             @relation(fields: [roomTypeId], references: [id])
+  household Household?           @relation(fields: [householdId], references: [id])
+  occupants AllocationOccupant[]
+
+  @@index([weddingId, hotelId, roomTypeId, checkInDate])
+  @@map("room_allocations")
+}
+
+// Each person in a room stays an individual record.
+model AllocationOccupant {
+  id           String   @id @default(uuid()) @db.Uuid
+  allocationId String   @map("allocation_id") @db.Uuid
+  guestId      String   @map("guest_id") @db.Uuid
+  checkInDate  DateTime @map("check_in_date") @db.Date  // denormalised from allocation for the constraint below
+  checkOutDate DateTime @map("check_out_date") @db.Date
+
+  allocation RoomAllocation @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+  guest      Guest          @relation(fields: [guestId], references: [id])
+
+  // Raw SQL migration: EXCLUDE USING gist (guest_id WITH =, daterange(check_in_date, check_out_date) WITH &&)
+  // so a guest can never be in two rooms on the same night (cancelled allocations remove their occupants).
+  @@unique([allocationId, guestId])
+  @@map("allocation_occupants")
+}
+
+// ───────────── Audit ─────────────
+
+model AuditEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  weddingId    String   @map("wedding_id") @db.Uuid
+  actorUserId  String?  @map("actor_user_id") @db.Uuid
+  actorGuestId String?  @map("actor_guest_id") @db.Uuid
+  entityType   String   @map("entity_type") // Guest, StayRequirement, RoomAllocation, RoomBlock, ...
+  entityId     String   @map("entity_id") @db.Uuid
+  action       String   // created, updated, deleted, overridden, published, revoked
+  beforeJson   Json?    @map("before_json")
+  afterJson    Json?    @map("after_json")
+  reason       String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  wedding Wedding @relation(fields: [weddingId], references: [id])
+
+  @@index([weddingId, entityType, entityId])
+  @@map("audit_events")
+}

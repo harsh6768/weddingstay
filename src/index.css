@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Layout: sidebar workspace on desktop, bottom tab bar on phones. Colours are RGB triplets for Tailwind alpha. */
+:root {
+  --bg: 250 248 250; --surface: 255 255 255; --sunk: 243 239 244;
+  --ink: 35 26 38; --muted: 108 96 112; --line: 228 221 230;
+  --plum: 107 37 92; --onplum: 255 255 255; --plumsoft: 245 233 242; --marigold: 196 128 14;
+  --good: 28 125 78; --warn: 176 108 6; --bad: 186 40 52; --info: 38 98 168;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: 22 17 24; --surface: 32 26 35; --sunk: 27 21 29;
+    --ink: 240 234 242; --muted: 170 158 175; --line: 58 48 62;
+    --plum: 216 136 198; --onplum: 34 14 30; --plumsoft: 62 34 57; --marigold: 236 176 70;
+    --good: 96 200 140; --warn: 232 172 64; --bad: 240 112 118; --info: 124 172 232;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: 22 17 24; --surface: 32 26 35; --sunk: 27 21 29;
+  --ink: 240 234 242; --muted: 170 158 175; --line: 58 48 62;
+  --plum: 216 136 198; --onplum: 34 14 30; --plumsoft: 62 34 57; --marigold: 236 176 70;
+  --good: 96 200 140; --warn: 232 172 64; --bad: 240 112 118; --info: 124 172 232;
+  color-scheme: dark;
+}
+
+html, body { background: rgb(var(--bg)); color: rgb(var(--ink)); }
+body { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { text-wrap: balance; }
+.num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid rgb(var(--plum)); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+@layer components {
+  .card { @apply bg-surface border border-line rounded-xl; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors min-h-[40px]; }
+  .btn-primary { @apply btn bg-plum text-onplum hover:bg-plum/90; }
+  .btn-ghost { @apply btn border border-line bg-surface text-ink hover:bg-sunk; }
+  .input { @apply w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-[15px] text-ink placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-plum/40 min-h-[44px]; }
+  .label { @apply block text-[13px] font-medium text-ink mb-1.5; }
+  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted; }
+  .th { @apply text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted px-3 py-2.5 whitespace-nowrap; }
+  .td { @apply px-3 py-2.5 border-t border-line align-top; }
+}
