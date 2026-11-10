@@ -1,6 +1,6 @@
 import { AlertTriangle, ArrowRight, CheckCircle2, Circle } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Bar, PageHeader, Pill, Section, Stat } from '../components/ui'
+import { Bar, Pill, Section, Stat } from '../components/ui'
 import { demandByNight, detectConflicts } from '../lib/accommodation'
 import { fmtDow, fmtTime, nightsOf } from '../lib/dates'
 import { functionHeadcount, guestStats } from '../lib/stats'
@@ -27,13 +27,20 @@ export default function Overview() {
 
   return (
     <>
-      <PageHeader title={`${data.wedding.name}, ${daysLeft} days to go`} subtitle={`Responses close on 25 Nov. ${s.yes} of ${s.invited} guests have said yes so far.`} />
+      <section className="glow mb-6">
+        <div className="text-[14px] text-muted">Good evening, Ananya</div>
+        <h1 className="mt-1 font-display text-[36px] md:text-[52px] leading-[1] font-semibold max-w-[20ch]">{daysLeft} days to go, and {s.unallocated} guests still need a room</h1>
+        <div className="mt-5 max-w-[640px]">
+          <div className="flex justify-between text-[13px] text-muted mb-2"><span>{s.yes + s.no + s.maybe} of {s.invited} guests have answered</span><span>Responses close 25 Nov</span></div>
+          <Bar total={s.invited} parts={[{ value: s.yes, cls: 'bg-good', label: 'Attending' }, { value: s.maybe, cls: 'bg-warn', label: 'Maybe' }, { value: s.no, cls: 'bg-muted/50', label: 'Not coming' }]} />
+        </div>
+      </section>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Stat label="Guests invited" value={s.invited} hint={`${s.households} families · ${s.outstation} outstation`} />
-        <Stat label="Attending" value={s.yes} hint={`${s.maybe} maybe · ${s.no} not coming`} tone="good" />
-        <Stat label="No reply yet" value={s.pending} hint={`${s.pendingHouseholds} families to chase`} tone={s.pending ? 'warn' : undefined} />
-        <Stat label="Need a room, unassigned" value={s.unallocated} hint={`of ${s.needsRoom} guests needing rooms`} tone={s.unallocated ? 'bad' : 'good'} />
+        <Stat label="Guests invited" value={s.invited} hint={`${s.households} families, ${s.outstation} from out of town`} />
+        <Stat label="Attending" value={s.yes} hint={`${s.maybe} maybe, ${s.no} not coming`} tone="good" />
+        <Stat label="No reply yet" value={s.pending} hint={`${s.pendingHouseholds} families to follow up`} tone={s.pending ? 'warn' : undefined} />
+        <Stat label="Waiting for a room" value={s.unallocated} hint={`of ${s.needsRoom} guests who asked`} tone={s.unallocated ? 'bad' : 'good'} />
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1.35fr_1fr]">
@@ -44,8 +51,8 @@ export default function Overview() {
                 <div key={d.night} className="grid grid-cols-[88px_1fr_auto] items-center gap-3">
                   <div className="text-[13px] font-medium">{fmtDow(d.night)}</div>
                   <div className="space-y-1">
-                    <div className="h-2.5 rounded-full bg-plum/80" style={{ width: `${(d.needed / maxN) * 100}%` }} title={`${d.needed} rooms needed`} />
-                    <div className="h-2.5 rounded-full bg-marigold/70" style={{ width: `${(d.supply / maxN) * 100}%` }} title={`${d.supply} rooms held or confirmed`} />
+                    <div className="fill h-3 rounded-full bg-plum" style={{ width: `${(d.needed / maxN) * 100}%` }} title={`${d.needed} rooms needed`} />
+                    <div className="fill h-3 rounded-full bg-marigold" style={{ width: `${(d.supply / maxN) * 100}%` }} title={`${d.supply} rooms held or confirmed`} />
                   </div>
                   <div className="text-right text-[12.5px] num w-[92px]">
                     {d.shortfall > 0 ? <span className="text-bad font-semibold">{d.shortfall} short</span> : d.needed === 0 ? <span className="text-muted">No stays</span> : <span className="text-good">{d.supply - d.needed} spare</span>}
@@ -53,8 +60,8 @@ export default function Overview() {
                 </div>
               ))}
               <div className="flex gap-4 pt-1 text-[12px] text-muted">
-                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-plum/80" />Rooms needed (est.)</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-marigold/70" />Held or confirmed by hotels</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-plum" />Rooms needed (est.)</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-marigold" />Held or confirmed by hotels</span>
               </div>
               <p className="text-[12px] text-muted">Rooms planned or requested but not yet held by a hotel are not counted here.</p>
             </div>

@@ -12,7 +12,7 @@ export function GuestDone() {
     <GuestFrame>
       <div className="card p-6 text-center">
         <CheckCircle2 className="mx-auto text-good" size={36} />
-        <h1 className="mt-3 font-display text-[24px] font-semibold">Thank you, we've got it</h1>
+        <h1 className="mt-3 font-display text-[28px] leading-tight font-semibold">Thank you, we've got it</h1>
         <p className="mt-1 text-muted">Ananya &amp; Rohan can now see your family's reply. Open this same link anytime before 25 Nov to make changes.</p>
         <div className="mt-5 flex flex-col gap-2">
           <Link to={`/g/${householdId}/stay`} className="btn-primary">See your stay and schedule</Link>
@@ -35,7 +35,7 @@ export default function GuestStay() {
 
   return (
     <GuestFrame>
-      <h1 className="font-display text-[24px] font-semibold mb-4">Your stay, {h?.name.replace(/ \(.*\)/, '')}</h1>
+      <h1 className="font-display text-[28px] leading-tight font-semibold mb-4">Your stay, {h?.name.replace(/ \(.*\)/, '')}</h1>
       {rooms.length === 0 ? (
         <div className="card p-5">
           <div className="flex items-center gap-2 font-semibold"><Clock size={18} className="text-warn" /> Your room isn't confirmed yet</div>

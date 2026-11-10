@@ -14,11 +14,11 @@ export function GuestFrame({ children }: { children: React.ReactNode }) {
   const { data } = useStore()
   return (
     <div className="min-h-full bg-bg">
-      <div className="bg-plum text-onplum" style={gutter}>
-        <div className="mx-auto max-w-[560px] py-5">
-          <div className="flex items-center gap-2 text-[12px] opacity-80"><Mark className="h-4 w-4" /> Shared privately with you via WeddingStay</div>
-          <div className="mt-2 font-display text-[28px] font-semibold leading-tight">{data.wedding.brideName.split(' ')[0]} &amp; {data.wedding.groomName.split(' ')[0]}</div>
-          <div className="text-[14px] opacity-90">{data.wedding.venueName}, {data.wedding.city} · 11 to 13 December 2026</div>
+      <div className="glow" style={gutter}>
+        <div className="mx-auto max-w-[560px] pt-8 pb-4">
+          <div className="flex items-center gap-2 text-[12.5px] text-muted"><Mark className="h-5 w-5" /> A private link from the couple</div>
+          <div className="mt-4 font-display text-[44px] sm:text-[52px] font-semibold leading-[0.95]">{data.wedding.brideName.split(' ')[0]} &amp; {data.wedding.groomName.split(' ')[0]}</div>
+          <div className="mt-2 text-[15px] text-muted">{data.wedding.venueName}, {data.wedding.city}. 11 to 13 December 2026</div>
         </div>
       </div>
       <div className="mx-auto max-w-[560px] py-5 pb-16" style={gutter}>{children}</div>
@@ -31,7 +31,7 @@ function Choice<T extends string>({ value, options, onChange, name }: { value: T
     <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }} role="radiogroup" aria-label={name}>
       {options.map((o) => (
         <button key={o.v} type="button" role="radio" aria-checked={value === o.v} onClick={() => onChange(o.v)}
-          className={clsx('rounded-lg border px-2 py-2.5 text-[14px] font-medium min-h-[44px]', value === o.v ? 'border-plum bg-plumsoft text-plum' : 'border-line bg-surface text-ink')}>
+          className={clsx('rounded-full border px-2 py-2.5 text-[14px] font-medium min-h-[46px] transition-colors', value === o.v ? 'border-plum bg-plum text-onplum' : 'border-line bg-surface text-ink hover:bg-sunk')}>
           {o.label}
         </button>
       ))}
@@ -82,7 +82,7 @@ export default function GuestForm() {
       {step === 0 && (
         <section className="flex flex-col gap-4">
           <div>
-            <h1 className="font-display text-[24px] font-semibold">Namaste {lead.firstName}, who from the {household.name.replace(/ \(.*\)/, '')} is coming?</h1>
+            <h1 className="font-display text-[28px] leading-tight font-semibold">Namaste {lead.firstName}, who from the {household.name.replace(/ \(.*\)/, '')} is coming?</h1>
             <p className="mt-1 text-muted">You can answer for everyone in your family. Each person's reply is kept separately.</p>
           </div>
           {people.map((p) => (
@@ -98,7 +98,7 @@ export default function GuestForm() {
 
       {step === 1 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[24px] font-semibold">Which functions will you attend?</h1><p className="mt-1 text-muted">Tap a name to change it for that person.</p></div>
+          <div><h1 className="font-display text-[28px] leading-tight font-semibold">Which functions will you attend?</h1><p className="mt-1 text-muted">Tap a name to change it for that person.</p></div>
           {fns.map((f) => (
             <div key={f.id} className="card p-4">
               <div className="flex items-baseline justify-between gap-2"><div className="font-semibold text-[16px]">{f.name}</div><div className="text-[12.5px] text-muted">{fmtDow(f.date)}, {fmtTime(f.startTime)}</div></div>
@@ -121,7 +121,7 @@ export default function GuestForm() {
 
       {step === 2 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[24px] font-semibold">How are you travelling to Udaipur?</h1><p className="mt-1 text-muted">Rough times are fine. You can update this later from the same link.</p></div>
+          <div><h1 className="font-display text-[28px] leading-tight font-semibold">How are you travelling to Udaipur?</h1><p className="mt-1 text-muted">Rough times are fine. You can update this later from the same link.</p></div>
           <div className="card p-4 flex flex-col gap-4">
             <div><label htmlFor="dep-city" className="label">Travelling from</label><input id="dep-city" className="input" value={travel.departureCity ?? household.city} onChange={(e) => setTravel({ departureCity: e.target.value })} /></div>
             <div>
@@ -146,7 +146,7 @@ export default function GuestForm() {
 
       {step === 3 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[24px] font-semibold">Do you need a place to stay?</h1><p className="mt-1 text-muted">The couple is arranging rooms for outstation guests. They'll confirm your room before the wedding.</p></div>
+          <div><h1 className="font-display text-[28px] leading-tight font-semibold">Do you need a place to stay?</h1><p className="mt-1 text-muted">The couple is arranging rooms for outstation guests. They'll confirm your room before the wedding.</p></div>
           <div className="card p-4 flex flex-col gap-4">
             <Choice name="Need accommodation" value={stay.needs} onChange={(v: NeedsRoom) => setStay({ needs: v, ...(v === 'YES' && !stay.checkIn ? { checkIn: travel.arrivalDate ?? '2026-12-11', checkOut: travel.departureDate ?? '2026-12-14' } : {}) })}
               options={[{ v: 'YES', label: 'Yes please' }, { v: 'NO', label: 'No' }, { v: 'UNSURE', label: 'Not sure' }]} />
@@ -167,7 +167,7 @@ export default function GuestForm() {
 
       {step === 4 && (
         <section className="flex flex-col gap-4">
-          <div><h1 className="font-display text-[24px] font-semibold">Almost done</h1></div>
+          <div><h1 className="font-display text-[28px] leading-tight font-semibold">Almost done</h1></div>
           <div className="card p-4 text-[14px] flex flex-col gap-1.5">
             <div><span className="font-semibold">{people.filter((p) => p.rsvp === 'YES').length}</span> coming{people.some((p) => p.rsvp === 'MAYBE') ? `, ${people.filter((p) => p.rsvp === 'MAYBE').length} maybe` : ''}{people.some((p) => p.rsvp === 'NO') ? `, ${people.filter((p) => p.rsvp === 'NO').length} can’t make it` : ''}</div>
             {anyComing && travel.arrivalDate && <div className="text-muted">Arriving {fmtDow(travel.arrivalDate)}{travel.arrivalTime ? `, ${fmtTime(travel.arrivalTime)}` : ''}{travel.arrivalNumber ? ` on ${travel.arrivalNumber}` : ''}</div>}

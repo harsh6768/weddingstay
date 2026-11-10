@@ -10,7 +10,7 @@ export default {
         good: v('good'), warn: v('warn'), bad: v('bad'), info: v('info'),
       },
       fontFamily: {
-        display: ['Fraunces', 'Georgia', 'serif'],
+        display: ['"Bricolage Grotesque"', 'Inter', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
     },
