@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import { Check, Eye } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import RsvpHero from '../components/RsvpHero'
 import { PageHeader, Pill } from '../components/ui'
@@ -34,12 +35,20 @@ function MiniRsvp({ t }: { t: RsvpTemplate }) {
 export default function RsvpDesign() {
   const { data, dispatch } = useStore()
   const current = data.wedding.rsvpTemplate
+  const [tab, setTab] = useState<'all' | 'artistic' | 'modern'>('all')
+  const shown = templates.filter((t) => tab === 'all' || (tab === 'artistic' ? t.category === 'artistic' : t.category !== 'artistic'))
   return (
     <>
       <PageHeader title="RSVP design" subtitle="Pick how your guest link looks. Every family sees the design you choose, and you can change it anytime, even after links are sent."
         actions={<Link to="/app/invitations" className="btn-ghost">Back to invitations</Link>} />
+      <div className="mb-5 flex gap-1.5 overflow-x-auto" role="tablist">
+        {([['all', `All designs (${templates.length})`], ['artistic', 'Artistic & illustrated'], ['modern', 'Classic & modern']] as const).map(([k, label]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+            className={clsx('whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium', tab === k ? 'bg-ink text-bg' : 'bg-sunk text-muted hover:text-ink')}>{label}</button>
+        ))}
+      </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {templates.map((t) => {
+        {shown.map((t) => {
           const on = t.id === current
           return (
             <article key={t.id} className={clsx('card overflow-hidden flex flex-col', on && 'ring-2 ring-plum ring-offset-2 ring-offset-bg')}>
@@ -48,7 +57,7 @@ export default function RsvpDesign() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="font-display text-[20px] font-semibold">{t.name}</h2>
-                    {on ? <Pill tone="plum"><Check size={12} /> In use</Pill> : t.modern ? <Pill tone="info">Modern</Pill> : <Pill>Classic</Pill>}
+                    {on ? <Pill tone="plum"><Check size={12} /> In use</Pill> : t.category === 'artistic' ? <Pill tone="warn">Artistic</Pill> : t.category === 'modern' ? <Pill tone="info">Modern</Pill> : <Pill>Classic</Pill>}
                   </div>
                   <p className="mt-1 text-[13px] text-muted">{t.mood}</p>
                   <div className="mt-2 flex gap-1.5" aria-label="Colours">

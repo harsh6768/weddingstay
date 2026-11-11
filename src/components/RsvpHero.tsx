@@ -1,5 +1,6 @@
 import clsx from 'clsx'
-import type { RsvpTemplate } from '../lib/templates'
+import { ILLUSTRATED, type RsvpTemplate } from '../lib/templates'
+import { LoveBirds, PandaKoala, Peacock, RoyalElephants } from './Illustrations'
 import { Arch, DecoFan, GoldDivider, Mandala, Monogram, PopConfetti, Sprig, Toran } from './Ornaments'
 
 interface Props {
@@ -11,17 +12,21 @@ interface Props {
   compact?: boolean
 }
 
+const ART = { pandakoala: PandaKoala, lovebirds: LoveBirds, elephants: RoyalElephants, peacock: Peacock } as const
+
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 
 /** Header of the guest pages, drawn in the chosen RSVP design. */
 export default function RsvpHero({ t, bride, groom, venue, city, compact }: Props) {
   const namesFont = { fontFamily: 'var(--names-font)' }
+  const Art = ILLUSTRATED.includes(t.ornament) ? ART[t.ornament as keyof typeof ART] : null
 
   if (compact) {
     return (
       <>
         {t.ornament === 'toran' && <div className="mx-auto h-[52px] max-w-[720px] overflow-hidden"><Toran /></div>}
-        <header className={clsx('text-center', t.ornament !== 'toran' && 'pt-6')} style={gutter}>
+        <header className={clsx('text-center', t.ornament !== 'toran' && !Art && 'pt-6', Art && 'pt-3')} style={gutter}>
+          {Art && <Art className="mx-auto h-[76px] w-[130px]" />}
           <div className={clsx(t.namesClass, '!text-[30px] !leading-[1.15] !tracking-normal', t.names.includes('Vibes') && '!text-[40px]')} style={namesFont}>
             {bride} <span className="text-gold">&amp;</span> {groom}
           </div>
@@ -58,6 +63,18 @@ export default function RsvpHero({ t, bride, groom, venue, city, compact }: Prop
               <div className="mt-2">{date}</div>{place}
             </div>
           </>
+        )}
+
+        {Art && (
+          <div className="pt-8 pb-4">
+            <Art />
+            <div className={clsx('mt-3 text-[15px]', t.head.includes('Fraunces') ? 'font-medium text-plum' : 'font-serif italic text-muted')}>{t.kicker}</div>
+            <div className="mt-1">{names}</div>
+            {invite}
+            <div className="mt-5 inline-flex flex-col items-center rounded-2xl border border-gold/40 bg-surface/80 px-6 py-2.5">
+              {date}<div className="text-[13.5px] text-muted">{venue}, {city}</div>
+            </div>
+          </div>
         )}
 
         {t.ornament === 'monogram' && (
