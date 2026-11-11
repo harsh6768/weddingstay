@@ -27,7 +27,7 @@ function ScrollTop() {
 export default function App() {
   return (
     <StoreProvider>
-      <Router>
+      <Router {...(import.meta.env.MODE === 'preview' ? { initialEntries: [import.meta.env.VITE_START_PATH || '/'] } : {})}>
         <ScrollTop />
         <Routes>
           <Route path="/" element={<Landing />} />
