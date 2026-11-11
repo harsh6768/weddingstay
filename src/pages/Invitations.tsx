@@ -1,7 +1,8 @@
-import { Copy, ExternalLink, MessageCircle, Share2 } from 'lucide-react'
+import { Copy, ExternalLink, MessageCircle, Palette, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { InvitationPill, Modal, PageHeader, Pill } from '../components/ui'
+import { templateById } from '../lib/templates'
 import type { Household, InvitationState } from '../data/types'
 import { sideLabel } from '../lib/stats'
 import { useStore } from '../store'
@@ -31,7 +32,8 @@ export default function Invitations() {
 
   return (
     <>
-      <PageHeader title="Invitations & responses" subtitle="Each family gets one private link. You share it from your own WhatsApp; we track who has replied." />
+      <PageHeader title="Invitations & responses" subtitle="Each family gets one private link. You share it from your own WhatsApp; we track who has replied."
+        actions={<Link to="/app/invitations/design" className="btn-primary"><Palette size={16} /> RSVP design: {templateById(data.wedding.rsvpTemplate).name}</Link>} />
 
       <div className="grid gap-3 sm:grid-cols-3 mb-5">
         {(['NOT_SENT', 'SENT', 'STARTED'] as InvitationState[]).map((s) => (

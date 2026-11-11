@@ -40,6 +40,7 @@ html, body { background: rgb(var(--bg)); color: rgb(var(--ink)); }
 body { background-image: radial-gradient(120% 50% at 50% 0%, rgb(var(--glow-b) / 0.10), transparent 60%); background-attachment: fixed; font-variant-numeric: lining-nums; }
 body { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { text-wrap: balance; }
+.font-head { font-family: var(--head-font, "Cormorant Garamond", Georgia, serif); }
 .font-display { letter-spacing: 0; font-variant-numeric: lining-nums; }
 .num { font-variant-numeric: tabular-nums lining-nums; }
 :focus-visible { outline: 2px solid rgb(var(--plum)); outline-offset: 2px; border-radius: 10px; }
@@ -75,8 +76,9 @@ h1, h2, h3 { text-wrap: balance; }
   color: rgb(var(--ink));
 }
 .invite .card { @apply rounded-[18px] shadow-[0_1px_0_rgb(255_255_255/0.8)_inset,0_10px_30px_-20px_rgb(90_30_20/0.35)]; border-color: rgb(var(--gold) / 0.35); }
-.invite .btn-primary { background: linear-gradient(180deg, rgb(150 30 58), rgb(var(--plum))); box-shadow: 0 0 0 1px rgb(var(--gold) / 0.55) inset, 0 10px 22px -10px rgb(var(--plum) / 0.6); }
-.invite h1, .invite h2 { font-family: "Cormorant Garamond", Georgia, serif; letter-spacing: 0; font-weight: 600; }
+.invite .btn-primary { background: linear-gradient(180deg, rgb(var(--plum) / 0.86), rgb(var(--plum))); box-shadow: 0 0 0 1px rgb(var(--gold) / 0.55) inset, 0 10px 22px -10px rgb(var(--plum) / 0.6); }
+/* Zero specificity so a template's own utilities (weight, case) win. */
+:where(.invite) :where(h1, h2) { font-family: var(--head-font, "Cormorant Garamond", Georgia, serif); letter-spacing: 0; font-weight: 600; }
 
 @layer components {
   .card { @apply bg-surface border border-gold/30 rounded-[20px] shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-18px_rgb(var(--ink)/0.18)]; }

@@ -1,42 +1,39 @@
 import clsx from 'clsx'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { GoldDivider, Mandala, Toran } from '../components/Ornaments'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import RsvpHero from '../components/RsvpHero'
+import { templateById, templateStyle } from '../lib/templates'
 import type { Guest, NeedsRoom, Rsvp, TravelMode } from '../data/types'
 import { fmtDow, fmtTime } from '../lib/dates'
 import { useStore } from '../store'
 
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 
-export function GuestFrame({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
+/** The chosen RSVP design: ?design=<id> previews one without saving it. */
+export function useRsvpDesign() {
   const { data } = useStore()
-  const bride = data.wedding.brideName.split(' ')[0]
-  const groom = data.wedding.groomName.split(' ')[0]
-  const script = { fontFamily: '"Great Vibes", cursive' }
+  const [sp] = useSearchParams()
+  const preview = sp.get('design')
+  return { t: templateById(preview ?? data.wedding.rsvpTemplate), preview, search: preview ? `?design=${preview}` : '' }
+}
+
+export function GuestFrame({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
+  const { data, dispatch } = useStore()
+  const { t, preview } = useRsvpDesign()
+  const nav = useNavigate()
+  const inUse = data.wedding.rsvpTemplate === t.id
   return (
-    <div className="invite min-h-screen overflow-x-hidden">
-      <div className={clsx('mx-auto max-w-[720px] overflow-hidden', compact && 'h-[52px]')}><Toran /></div>
-      {compact ? (
-        <header className="text-center" style={gutter}>
-          <div className="text-[40px] leading-[1.1] text-plum" style={script}>{bride} <span className="font-serif italic text-[26px] text-[rgb(var(--gold))]">&amp;</span> {groom}</div>
-          <div className="font-serif text-[15px] text-muted">11 to 13 December 2026 · {data.wedding.city}</div>
-        </header>
-      ) : (
-        <header className="relative text-center" style={gutter}>
-          <Mandala className="pointer-events-none absolute left-1/2 top-[-40px] h-[340px] w-[340px] -translate-x-1/2 opacity-[0.16]" />
-          <div className="relative mx-auto max-w-[560px] pt-2 pb-2">
-            <div className="font-serif italic text-[15px] text-muted">Together with their families</div>
-            <h1 className="mt-1 !font-normal text-[56px] sm:text-[68px] leading-[1.05] text-plum" style={script}>
-              {bride} <span className="font-serif italic text-[34px] sm:text-[40px] text-[rgb(var(--gold))] align-middle">&amp;</span> {groom}
-            </h1>
-            <div className="font-serif italic text-[16px] text-ink/80">request the pleasure of your company</div>
-            <GoldDivider className="mx-auto mt-3 h-6 w-[200px]" />
-            <div className="mt-2 font-serif text-[19px] font-semibold tracking-[0.12em] uppercase text-ink">11 · 12 · 13 December 2026</div>
-            <div className="mt-0.5 font-serif text-[16px] text-muted">{data.wedding.venueName}, {data.wedding.city}</div>
-          </div>
-        </header>
+    <div className="invite min-h-screen overflow-x-hidden" style={templateStyle(t)}>
+      {preview && (
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-2 bg-[rgb(22_17_20/0.92)] px-4 py-2 text-[13px] text-white backdrop-blur" style={{ paddingTop: 'max(8px, env(safe-area-inset-top, 0px))' }}>
+          <Link to="/app/invitations/design" className="inline-flex items-center gap-1.5 font-medium"><ArrowLeft size={15} /> Designs</Link>
+          <span className="truncate opacity-80">Preview: {t.name}</span>
+          {inUse ? <span className="rounded-full bg-white/15 px-3 py-1 font-medium">In use</span>
+            : <button type="button" className="rounded-full bg-white px-3 py-1 font-semibold text-[rgb(22_17_20)]" onClick={() => { dispatch({ type: 'wedding/template', id: t.id }); nav('/app/invitations/design') }}>Use this</button>}
+        </div>
       )}
+      <RsvpHero t={t} bride={data.wedding.brideName.split(' ')[0]} groom={data.wedding.groomName.split(' ')[0]} venue={data.wedding.venueName} city={data.wedding.city} compact={compact} />
       <div className="relative mx-auto max-w-[520px] py-5 pb-16" style={gutter}>{children}</div>
     </div>
   )
@@ -61,6 +58,7 @@ const steps = ['Who’s coming', 'Your stay', 'Send']
 export default function GuestForm() {
   const { householdId = 'h02' } = useParams()
   const { data, dispatch } = useStore()
+  const { search } = useRsvpDesign()
   const nav = useNavigate()
   const household = data.households.find((h) => h.id === householdId)
   const fns = data.functions.filter((f) => f.isPublished)
@@ -96,10 +94,10 @@ export default function GuestForm() {
   const next = () => go(step === 0 && !anyComing ? 2 : step + 1)
   const submit = () => {
     dispatch({ type: 'guest/respond', householdId, guests: people.map((p) => ({ ...p, attendance: Object.fromEntries(fns.map((f) => [f.id, p.rsvp === 'NO' ? 'NO' : p.attendance[f.id] ?? 'PENDING'])) })) })
-    nav(`/g/${householdId}/done`)
+    nav(`/g/${householdId}/done${search}`)
   }
   const blocked = (step === 0 && unanswered) || (step === 1 && stayBlocked)
-  const h1 = 'font-display text-[28px] leading-[1.1] font-semibold'
+  const h1 = 'font-head text-[28px] leading-[1.1] font-semibold'
 
   return (
     <GuestFrame compact={step > 0}>

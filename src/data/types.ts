@@ -21,6 +21,8 @@ export interface Wedding {
   endDate: string
   timezone: string
   responseDeadline: string
+  /** Which RSVP design guests see (see src/lib/templates.ts). */
+  rsvpTemplate: string
 }
 
 export interface WeddingFunction {

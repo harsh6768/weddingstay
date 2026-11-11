@@ -1,5 +1,6 @@
 // In-memory store for the prototype. Changes last until the page reloads.
 // Later this is replaced by API calls; the action names map to the planned endpoints.
+import { templateById } from './lib/templates'
 import { createContext, useContext, useMemo, useReducer, type ReactNode } from 'react'
 import { sampleData } from './data/sample'
 import type { AllocationStatus, Guest, InvitationState, RoomAllocation, WeddingData } from './data/types'
@@ -11,6 +12,7 @@ type Action =
   | { type: 'allocation/publish'; householdId: string; published: boolean }
   | { type: 'invitation/state'; householdId: string; state: InvitationState }
   | { type: 'function/publish'; id: string; published: boolean }
+  | { type: 'wedding/template'; id: string }
   | { type: 'guest/respond'; householdId: string; guests: Guest[] }
   | { type: 'reset' }
 
@@ -33,6 +35,8 @@ function reducer(s: WeddingData, a: Action): WeddingData {
       }
     case 'invitation/state':
       return { ...s, households: s.households.map((h) => (h.id === a.householdId ? { ...h, invitation: a.state, sentAt: h.sentAt ?? now().slice(0, 10) } : h)) }
+    case 'wedding/template':
+      return { ...s, wedding: { ...s.wedding, rsvpTemplate: a.id }, audit: [event('Ananya Iyer', 'RSVP design changed', templateById(a.id).name), ...s.audit] }
     case 'function/publish':
       return { ...s, functions: s.functions.map((f) => (f.id === a.id ? { ...f, isPublished: a.published } : f)) }
     case 'guest/respond': {

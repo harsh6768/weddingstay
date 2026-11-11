@@ -23,6 +23,7 @@ const wedding = {
   endDate: '2026-12-13',
   timezone: 'Asia/Kolkata',
   responseDeadline: '2026-11-25',
+  rsvpTemplate: 'marigold',
 }
 
 const functions: WeddingFunction[] = [

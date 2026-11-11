@@ -12,6 +12,7 @@ import Landing from './pages/Landing'
 import Overview from './pages/Overview'
 import Requirements from './pages/Requirements'
 import Rooming from './pages/Rooming'
+import RsvpDesign from './pages/RsvpDesign'
 import Settings from './pages/Settings'
 import { StoreProvider } from './store'
 
@@ -35,6 +36,7 @@ export default function App() {
             <Route index element={<Overview />} />
             <Route path="guests" element={<Guests />} />
             <Route path="invitations" element={<Invitations />} />
+            <Route path="invitations/design" element={<RsvpDesign />} />
             <Route path="functions" element={<Functions />} />
             <Route path="accommodation" element={<Hotels />} />
             <Route path="accommodation/requirements" element={<Requirements />} />
