@@ -1,0 +1,14 @@
+{
+  "name": "WeddingStay",
+  "short_name": "WeddingStay",
+  "description": "Guests, RSVPs and hotel rooms for your wedding, in one place.",
+  "start_url": "./#/app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#180b11",
+  "theme_color": "#180b11",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
