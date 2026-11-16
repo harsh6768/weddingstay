@@ -103,3 +103,50 @@ h1, h2, h3 { text-wrap: balance; }
 .legal ul { margin-top: 0.75rem; display: grid; gap: 0.5rem; padding-left: 1.25rem; list-style: disc; font-size: 15.5px; line-height: 1.6; color: rgb(var(--ink) / 0.85); }
 .legal li::marker { color: rgb(var(--gold)); }
 .legal a { color: rgb(var(--plum)); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Festive details (home page) ---------- */
+/* Diya: the flame sways and the glow breathes, a little out of step per lamp. */
+@keyframes flicker { 0%,100% { transform: scale(1,1) skewX(0); } 25% { transform: scale(0.94,1.06) skewX(-3deg); } 50% { transform: scale(1.04,0.96) skewX(2deg); } 75% { transform: scale(0.97,1.04) skewX(-1deg); } }
+@keyframes breathe { 0%,100% { opacity: 0.75; } 50% { opacity: 1; } }
+.diya-flame { transform-origin: 32px 30px; transform-box: view-box; animation: flicker 1.6s ease-in-out infinite; }
+.diya-glow { animation: breathe 2.4s ease-in-out infinite; }
+
+/* Petals: fall the full height while swaying side to side. */
+@keyframes petal-fall { from { top: -40px; } to { top: 105%; } }
+@keyframes petal-sway { 0%,100% { transform: translateX(-18px) rotate(-30deg); } 50% { transform: translateX(18px) rotate(40deg); } }
+.petal { position: absolute; top: -40px; opacity: 0.85; animation-name: petal-fall, petal-sway; animation-timing-function: linear, ease-in-out; animation-iteration-count: infinite, infinite; }
+
+/* Line art that draws itself once on load. */
+@keyframes draw { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+.draw { stroke-dasharray: var(--len); animation: draw 2.4s cubic-bezier(.4,0,.2,1) both; }
+
+/* Functions ribbon: an endless banner that pauses under the pointer. */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee { animation: marquee 38s linear infinite; }
+.ribbon:hover .marquee { animation-play-state: paused; }
+
+/* Invite designs fan out; the one you point at lifts to the front. */
+.fan figure { transition: transform 0.45s cubic-bezier(.2,.7,.2,1); }
+@media (min-width: 768px) {
+  .fan figure .fan-card { transition: transform 0.45s cubic-bezier(.2,.7,.2,1), box-shadow 0.45s; }
+  .fan figure:nth-child(1) .fan-card { transform: rotate(-4deg) translateY(10px); }
+  .fan figure:nth-child(2) .fan-card { transform: rotate(-1.5deg); }
+  .fan figure:nth-child(3) .fan-card { transform: rotate(1.5deg); }
+  .fan figure:nth-child(4) .fan-card { transform: rotate(4deg) translateY(10px); }
+  .fan figure:hover .fan-card, .fan figure:focus-within .fan-card { transform: rotate(0) translateY(-14px) scale(1.03); box-shadow: 0 30px 60px -30px rgb(var(--ink) / 0.6), 0 0 0 1px rgb(var(--gold) / 0.6); }
+}
+
+/* Primary buttons catch the light when pointed at. */
+.btn-primary { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(110deg, transparent 30%, rgb(255 236 190 / 0.45) 50%, transparent 70%); transform: translateX(-120%); transition: transform 0.7s ease; }
+.btn-primary:hover::after { transform: translateX(120%); }
+
+/* Feature cards: a gold edge answers the pointer. */
+.lift { transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
+.lift:hover { transform: translateY(-4px); border-color: rgb(var(--gold) / 0.7); box-shadow: 0 24px 48px -28px rgb(var(--ink) / 0.45); }
+
+@media (prefers-reduced-motion: reduce) {
+  .petals { display: none; }
+  .marquee { animation: none; }
+  .draw { stroke-dashoffset: 0; }
+}

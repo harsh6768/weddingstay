@@ -1,6 +1,7 @@
-import { ArrowRight, ArrowUpRight, BedDouble, CalendarHeart, Check, ChevronDown, ClipboardList, Heart, MessageCircle, Palette, Smartphone, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BedDouble, CalendarHeart, Check, ChevronDown, ClipboardList, Heart, MessageCircle, Smartphone, Users } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Diya, FunctionsRibbon, Jharokha, MehndiVine, Petals, ScallopEdge } from '../components/Festive'
 import { GoldDivider, Mandala, Toran } from '../components/Ornaments'
 import { SiteFooter, SiteHeader, gutter, useParallax, useScrollToState, wrap } from '../components/Site'
 import RsvpHero from '../components/RsvpHero'
@@ -45,6 +46,7 @@ function Hero() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div data-speed="0.35" className="absolute -left-40 top-10"><Mandala className="h-[520px] w-[520px] opacity-[0.10]" /></div>
         <div data-speed="-0.2" className="absolute -right-32 top-[55%] hidden lg:block"><Mandala className="h-[380px] w-[380px] opacity-[0.08]" /></div>
+        <Petals />
       </div>
       <div className={`${wrap} grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center pt-6 md:pt-10 pb-16 md:pb-24`} style={gutter}>
         <div className="min-w-0">
@@ -77,7 +79,8 @@ function Hero() {
 function PhoneScene() {
   const t = templateById('marigold')
   return (
-    <div className="relative mx-auto w-full max-w-[520px] pt-4 pb-6">
+    <div className="relative mx-auto w-full max-w-[520px] pt-16 pb-2">
+      <Jharokha className="pointer-events-none absolute left-1/2 top-0 h-[calc(100%-40px)] w-[340px] sm:w-[390px] -translate-x-1/2" />
       <div className="relative mx-auto w-[272px] sm:w-[300px] rounded-[44px] bg-ink p-[10px] shadow-[0_40px_80px_-30px_rgb(var(--ink)/0.55)]">
         <div className="absolute left-1/2 top-[18px] z-10 h-[22px] w-[90px] -translate-x-1/2 rounded-full bg-ink" />
         <div className="invite overflow-hidden rounded-[35px]" style={templateStyle(t)}>
@@ -106,18 +109,24 @@ function PhoneScene() {
         </div>
       </div>
 
-      <div data-speed="-0.14" data-rot="-3" className="absolute left-0 -top-2 w-[200px] card p-3 hidden min-[480px]:block">
+      <div className="relative z-10 -mt-7 flex items-end justify-center gap-3 sm:gap-5">
+        {[34, 44, 56, 44, 34].map((size, i) => <Diya key={i} delay={i * 230} className="shrink-0" style={{ width: size, height: size }} />)}
+      </div>
+
+      <div data-speed="-0.14" data-rot="-3" className="absolute left-0 top-6 w-[200px] card p-3 hidden min-[480px]:block">
         <div className="flex items-center gap-1.5 text-[12px] font-medium text-good"><MessageCircle size={14} /> WhatsApp</div>
         <p className="mt-1.5 text-[12.5px] leading-snug">Meenakshi aunty, please tell us who's coming 🙏</p>
         <div className="mt-2 truncate rounded-lg bg-plumsoft px-2 py-1 text-[11.5px] font-medium text-plum">weddingstay.in/r/k7Qm9x</div>
       </div>
-      <div data-speed="0.12" data-rot="2.5" className="absolute right-0 bottom-[54px] w-[196px] card p-3 hidden min-[480px]:block">
+      <div data-speed="0.12" data-rot="2.5" className="absolute right-0 bottom-[96px] w-[196px] card p-3 hidden min-[480px]:block">
         <div className="flex items-center gap-2 text-[12.5px] font-medium"><span className="grid h-6 w-6 place-items-center rounded-full bg-good/15 text-good"><Check size={14} /></span> Room confirmed</div>
         <div className="mt-1.5 text-[12px] text-muted leading-snug">Family Suite · Aravali Lake Resort<br />11 to 13 Dec, 3 nights</div>
       </div>
     </div>
   )
 }
+
+const BAND = 'rgb(74 18 36)'
 
 function Familiar() {
   const lines = [
@@ -126,18 +135,26 @@ function Familiar() {
     ['“The hotel wants the rooming list tonight.”', 'Download a clean list per hotel, with arrivals, in one click.'],
   ]
   return (
-    <section className="border-y border-line bg-sunk/50">
-      <div className={`${wrap} py-14 md:py-16`} style={gutter}>
-        <div className="eyebrow uppercase tracking-[0.18em]">Sound familiar?</div>
-        <div className="mt-6 grid gap-8 md:grid-cols-3">
+    <section className="relative" style={{ color: 'rgb(255 247 232)' }}>
+      <ScallopEdge fill={BAND} />
+      <div style={{ background: BAND }}>
+      <div className={`${wrap} pt-10 pb-6 md:pt-14`} style={gutter}>
+        <div className="flex items-center gap-3">
+          <Diya className="h-10 w-10 shrink-0" />
+          <h2 className="font-script text-[40px] md:text-[48px] leading-none text-[rgb(246_190_96)]">Sound familiar?</h2>
+        </div>
+        <div className="mt-8 grid gap-8 md:grid-cols-3">
           {lines.map(([q, a], i) => (
             <div key={q} className="reveal min-w-0" style={{ transitionDelay: `${i * 120}ms` }}>
               <div className="font-display text-[26px] md:text-[28px] leading-tight font-semibold">{q}</div>
-              <p className="mt-2 text-[15px] leading-relaxed text-muted max-w-[38ch]">{a}</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-[rgb(255_247_232/0.72)] max-w-[38ch]">{a}</p>
             </div>
           ))}
         </div>
       </div>
+      <div className="mt-6 border-t border-[rgb(212_168_80/0.35)] text-[rgb(246_190_96)]"><FunctionsRibbon /></div>
+      </div>
+      <ScallopEdge fill={BAND} flip />
     </section>
   )
 }
@@ -148,7 +165,7 @@ function Features() {
       <div className={`${wrap} py-16 md:py-24`} style={gutter}>
         <SectionHead kicker="Everything in one place" title="From the first guest list to the last checkout" />
         <div className="mt-10 grid gap-3 md:grid-cols-12">
-          <div className="reveal card p-5 md:p-6 md:col-span-8 min-w-0">
+          <div className="reveal lift card p-5 md:p-6 md:col-span-8 min-w-0">
             <FeatureTitle icon={<BedDouble size={18} />} title="Rooms, night by night" body="Enter what each hotel has held or confirmed, then place families. Clashes and over-bookings show up before the hotel calls you." />
             <div className="mt-5 overflow-x-auto">
               <div className="min-w-[480px] grid grid-cols-[1.4fr_repeat(3,1fr)] gap-x-3 gap-y-3 items-center">
@@ -158,7 +175,7 @@ function Features() {
               </div>
             </div>
           </div>
-          <div className="reveal card p-5 md:p-6 md:col-span-4 min-w-0" style={{ transitionDelay: '120ms' }}>
+          <div className="reveal lift card p-5 md:p-6 md:col-span-4 min-w-0" style={{ transitionDelay: '120ms' }}>
             <FeatureTitle icon={<Users size={18} />} title="Both sides, one list" body="Bring in the bride’s and groom’s lists, catch duplicates, and group people into families with a coordinator for each side." />
             <ul className="mt-5 grid gap-2 text-[13.5px]">
               {[['Iyer family', 'Bride’s side', 6], ['Malhotra family', 'Groom’s side', 4], ['Subramanian family', 'Bride’s side', 4]].map(([n, s, c]) => (
@@ -181,15 +198,15 @@ function Designs() {
     <section id="designs" className="scroll-mt-20 border-t border-line">
       <div className={`${wrap} py-16 md:py-24`} style={gutter}>
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <SectionHead kicker={<span className="inline-flex items-center gap-1.5"><Palette size={14} /> Invite designs</span>} title="An invite your family will forward with pride" />
+          <SectionHead kicker="Invite designs" title="An invite your family will forward with pride" />
           <Link to="/app/invitations/design" className="btn-ghost">See all 10 designs <ArrowUpRight size={16} /></Link>
         </div>
-        <div className="mt-10 -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
+        <div className="fan mt-10 -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-4 md:pt-4 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
           {ids.map((id, i) => {
             const t = templateById(id)
             return (
               <figure key={id} data-speed={['0.04', '-0.04', '0.08', '0'][i]} className="w-[250px] shrink-0 snap-start md:w-auto min-w-0">
-                <div className="invite h-[300px] overflow-hidden rounded-[24px] border border-line shadow-[0_20px_40px_-28px_rgb(var(--ink)/0.5)]" style={templateStyle(t)}>
+                <div className="fan-card invite h-[300px] overflow-hidden rounded-[24px] border border-line shadow-[0_20px_40px_-28px_rgb(var(--ink)/0.5)]" style={templateStyle(t)}>
                   <div className="pt-4"><RsvpHero t={t} bride="Ananya" groom="Rohan" venue="Aravali Lake Resort" city="Udaipur" compact /></div>
                   <GoldDivider className="mx-auto mt-4 h-5 w-[140px]" />
                   <div className="mt-3 px-5 text-center text-[13px] text-muted font-serif italic">{t.invite}</div>
@@ -209,7 +226,8 @@ function Steps() {
     <section id="how" className="scroll-mt-20 border-t border-line">
       <div className={`${wrap} py-16 md:py-24`} style={gutter}>
         <SectionHead kicker="How it works" title="Three steps, then relax for the sangeet" />
-        <ol className="mt-10 grid gap-8 md:grid-cols-3">
+        <MehndiVine className="mt-10 hidden md:block h-auto w-full" />
+        <ol className="mt-4 md:mt-0 grid gap-8 md:grid-cols-3">
           {[
             ['Add your guests', 'Paste or import both sides’ lists. We group people into families and flag duplicates.'],
             ['Send one invite per family', 'Pick a design and share the link on WhatsApp. Replies come straight into your dashboard.'],
@@ -269,7 +287,8 @@ function Start() {
           </div>
           <div className="relative grid gap-10 px-6 pt-24 pb-10 md:px-12 md:pt-28 md:pb-12 lg:grid-cols-[1fr_1fr] lg:items-end">
             <div className="min-w-0">
-              <h2 className="font-display text-[38px] md:text-[54px] leading-[1.02] font-semibold">Start planning your wedding</h2>
+              <div className="flex items-end gap-2">{[30, 40, 30].map((w, i) => <Diya key={i} delay={i * 300} style={{ width: w, height: w }} />)}</div>
+              <h2 className="mt-4 font-display text-[38px] md:text-[54px] leading-[1.02] font-semibold">Start planning your wedding</h2>
               <p className="mt-4 text-[16px] leading-relaxed text-[rgb(255_247_232/0.75)] max-w-[42ch]">Tell us a little about it. You can add functions, hotels and guests right after.</p>
             </div>
             <form onSubmit={submit} className="reveal grid gap-3 rounded-[24px] bg-bg p-5 text-ink sm:grid-cols-2">
@@ -299,7 +318,7 @@ function Start() {
 function SectionHead({ kicker, title }: { kicker: ReactNode; title: string }) {
   return (
     <div className="reveal min-w-0">
-      <div className="eyebrow uppercase tracking-[0.18em] text-plum">{kicker}</div>
+      <div className="font-script text-[30px] md:text-[34px] leading-none text-gold">{kicker}</div>
       <h2 className="mt-3 font-display text-[36px] md:text-[50px] leading-[1.02] font-semibold max-w-[20ch]">{title}</h2>
     </div>
   )
@@ -316,7 +335,7 @@ function FeatureTitle({ icon, title, body }: { icon: ReactNode; title: string; b
 }
 
 function SmallFeature({ delay = 0, ...p }: { icon: ReactNode; title: string; body: string; delay?: number }) {
-  return <div className="reveal card p-5 md:p-6 md:col-span-4 min-w-0" style={{ transitionDelay: `${delay}ms` }}><FeatureTitle {...p} /></div>
+  return <div className="reveal lift card p-5 md:p-6 md:col-span-4 min-w-0" style={{ transitionDelay: `${delay}ms` }}><FeatureTitle {...p} /></div>
 }
 
 function Field({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
