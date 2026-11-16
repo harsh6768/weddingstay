@@ -9,6 +9,8 @@ import Guests from './pages/Guests'
 import Hotels from './pages/Hotels'
 import Invitations from './pages/Invitations'
 import Landing from './pages/Landing'
+import { Login, Register } from './pages/Auth'
+import { Privacy, Terms } from './pages/Legal'
 import Overview from './pages/Overview'
 import Requirements from './pages/Requirements'
 import Rooming from './pages/Rooming'
@@ -32,6 +34,10 @@ export default function App() {
         <ScrollTop />
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/app" element={<AppShell />}>
             <Route index element={<Overview />} />
             <Route path="guests" element={<Guests />} />

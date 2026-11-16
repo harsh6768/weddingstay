@@ -93,3 +93,13 @@ h1, h2, h3 { text-wrap: balance; }
   .th { @apply text-left text-[12px] font-medium text-muted px-3 py-3 whitespace-nowrap; }
   .td { @apply px-3 py-3 border-t border-line align-top; }
 }
+
+/* Public pages: sections fade up as they scroll in; parallax layers are moved from JS. */
+.reveal { opacity: 0.001; transform: translateY(26px); transition: opacity 0.8s cubic-bezier(.2,.7,.2,1), transform 0.8s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+[data-speed] { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+.legal p { margin-top: 0.75rem; font-size: 15.5px; line-height: 1.7; color: rgb(var(--ink) / 0.85); }
+.legal ul { margin-top: 0.75rem; display: grid; gap: 0.5rem; padding-left: 1.25rem; list-style: disc; font-size: 15.5px; line-height: 1.6; color: rgb(var(--ink) / 0.85); }
+.legal li::marker { color: rgb(var(--gold)); }
+.legal a { color: rgb(var(--plum)); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }

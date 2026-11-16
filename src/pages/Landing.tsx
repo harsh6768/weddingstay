@@ -1,17 +1,13 @@
-import { ArrowRight, ArrowUpRight, BedDouble, CalendarHeart, Check, ChevronDown, ClipboardList, Heart, MessageCircle, Palette, Plus, Smartphone, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BedDouble, CalendarHeart, Check, ChevronDown, ClipboardList, Heart, MessageCircle, Palette, Smartphone, Users } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mark } from '../components/AppShell'
-import { GoldDivider, Toran } from '../components/Ornaments'
+import { GoldDivider, Mandala, Toran } from '../components/Ornaments'
+import { SiteFooter, SiteHeader, gutter, useParallax, useScrollToState, wrap } from '../components/Site'
 import RsvpHero from '../components/RsvpHero'
 import { templateById, templateStyle } from '../lib/templates'
 
-const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 const d = (ms: number) => ({ animationDelay: `${ms}ms` })
-const wrap = 'mx-auto max-w-[1180px]'
 
-// The router uses the hash, so in-page links scroll instead of changing the URL.
-const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
 // Rooms per night for the allocation preview: [room type, hotel, [allocated, available] per night]
 const grid: [string, string, [number, number][]][] = [
@@ -21,11 +17,15 @@ const grid: [string, string, [number, number][]][] = [
 ]
 
 export default function Landing() {
+  useParallax()
+  useScrollToState()
   return (
     <div className="min-h-full overflow-x-hidden">
-      <Header />
-      <div className="pointer-events-none flex justify-center overflow-hidden h-[56px] sm:h-[72px]" aria-hidden="true">
-        {Array.from({ length: 6 }, (_, i) => <div key={i} className="w-[300px] sm:w-[400px] shrink-0"><Toran swags={4} /></div>)}
+      <SiteHeader />
+      <div className="pointer-events-none relative z-[1] h-[56px] sm:h-[72px]" aria-hidden="true">
+        <div data-speed="-0.12" className="flex justify-center">
+          {Array.from({ length: 6 }, (_, i) => <div key={i} className="w-[300px] sm:w-[400px] shrink-0"><Toran swags={4} /></div>)}
+        </div>
       </div>
       <Hero />
       <Familiar />
@@ -34,33 +34,18 @@ export default function Landing() {
       <Steps />
       <Faq />
       <Start />
-      <Footer />
+      <SiteFooter />
     </div>
-  )
-}
-
-function Header() {
-  return (
-    <header className="sticky z-30 border-b border-line/60 bg-bg/80 backdrop-blur-xl" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
-      <div className={`${wrap} flex items-center justify-between gap-3 py-3`} style={gutter}>
-        <div className="flex items-center gap-2"><Mark className="h-7 w-7" /><span className="font-display text-[20px] font-semibold">WeddingStay</span></div>
-        <nav className="hidden lg:flex items-center gap-1 text-[14px] text-muted">
-          {[['features', 'Features'], ['designs', 'Invite designs'], ['how', 'How it works'], ['faq', 'Questions']].map(([id, label]) => (
-            <button key={id} onClick={() => go(id)} className="rounded-full px-3 py-2 hover:bg-sunk hover:text-ink">{label}</button>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link to="/app" className="btn-ghost hidden sm:inline-flex">See a demo</Link>
-          <button onClick={() => go('start')} className="btn-primary">Create your wedding</button>
-        </div>
-      </div>
-    </header>
   )
 }
 
 function Hero() {
   return (
-    <section className="glow" >
+    <section className="glow relative">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div data-speed="0.35" className="absolute -left-40 top-10"><Mandala className="h-[520px] w-[520px] opacity-[0.10]" /></div>
+        <div data-speed="-0.2" className="absolute -right-32 top-[55%] hidden lg:block"><Mandala className="h-[380px] w-[380px] opacity-[0.08]" /></div>
+      </div>
       <div className={`${wrap} grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center pt-6 md:pt-10 pb-16 md:pb-24`} style={gutter}>
         <div className="min-w-0">
           <div className="rise inline-flex items-center gap-2 rounded-full border border-gold/40 bg-surface/80 px-3 py-1 text-[13px] font-medium text-plum" style={d(0)}>
@@ -73,7 +58,7 @@ function Hero() {
             Send each family one beautiful WhatsApp invite. They tell you who's coming to which function and who needs a room. You fit everyone into your hotel blocks, night by night, without the spreadsheet.
           </p>
           <div className="rise mt-8 flex flex-wrap gap-3" style={d(220)}>
-            <button onClick={() => go('start')} className="btn-primary !px-6 !py-3 text-[15px]">Create your wedding, free <ArrowRight size={17} /></button>
+            <Link to="/register" className="btn-primary !px-6 !py-3 text-[15px]">Create your wedding, free <ArrowRight size={17} /></Link>
             <Link to="/app" className="btn-ghost !px-6 !py-3 text-[15px]">Explore a sample wedding</Link>
           </div>
           <ul className="rise mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13.5px] text-muted" style={d(300)}>
@@ -82,7 +67,7 @@ function Hero() {
             ))}
           </ul>
         </div>
-        <div className="rise min-w-0" style={d(260)}><PhoneScene /></div>
+        <div className="rise min-w-0" style={d(260)}><div data-speed="0.06"><PhoneScene /></div></div>
       </div>
     </section>
   )
@@ -121,12 +106,12 @@ function PhoneScene() {
         </div>
       </div>
 
-      <div className="absolute left-0 -top-2 w-[200px] card p-3 rotate-[-3deg] hidden min-[480px]:block">
+      <div data-speed="-0.14" data-rot="-3" className="absolute left-0 -top-2 w-[200px] card p-3 hidden min-[480px]:block">
         <div className="flex items-center gap-1.5 text-[12px] font-medium text-good"><MessageCircle size={14} /> WhatsApp</div>
         <p className="mt-1.5 text-[12.5px] leading-snug">Meenakshi aunty, please tell us who's coming 🙏</p>
         <div className="mt-2 truncate rounded-lg bg-plumsoft px-2 py-1 text-[11.5px] font-medium text-plum">weddingstay.in/r/k7Qm9x</div>
       </div>
-      <div className="absolute right-0 bottom-[54px] w-[196px] card p-3 rotate-[2.5deg] hidden min-[480px]:block">
+      <div data-speed="0.12" data-rot="2.5" className="absolute right-0 bottom-[54px] w-[196px] card p-3 hidden min-[480px]:block">
         <div className="flex items-center gap-2 text-[12.5px] font-medium"><span className="grid h-6 w-6 place-items-center rounded-full bg-good/15 text-good"><Check size={14} /></span> Room confirmed</div>
         <div className="mt-1.5 text-[12px] text-muted leading-snug">Family Suite · Aravali Lake Resort<br />11 to 13 Dec, 3 nights</div>
       </div>
@@ -145,8 +130,8 @@ function Familiar() {
       <div className={`${wrap} py-14 md:py-16`} style={gutter}>
         <div className="eyebrow uppercase tracking-[0.18em]">Sound familiar?</div>
         <div className="mt-6 grid gap-8 md:grid-cols-3">
-          {lines.map(([q, a]) => (
-            <div key={q} className="min-w-0">
+          {lines.map(([q, a], i) => (
+            <div key={q} className="reveal min-w-0" style={{ transitionDelay: `${i * 120}ms` }}>
               <div className="font-display text-[26px] md:text-[28px] leading-tight font-semibold">{q}</div>
               <p className="mt-2 text-[15px] leading-relaxed text-muted max-w-[38ch]">{a}</p>
             </div>
@@ -163,7 +148,7 @@ function Features() {
       <div className={`${wrap} py-16 md:py-24`} style={gutter}>
         <SectionHead kicker="Everything in one place" title="From the first guest list to the last checkout" />
         <div className="mt-10 grid gap-3 md:grid-cols-12">
-          <div className="card p-5 md:p-6 md:col-span-8 min-w-0">
+          <div className="reveal card p-5 md:p-6 md:col-span-8 min-w-0">
             <FeatureTitle icon={<BedDouble size={18} />} title="Rooms, night by night" body="Enter what each hotel has held or confirmed, then place families. Clashes and over-bookings show up before the hotel calls you." />
             <div className="mt-5 overflow-x-auto">
               <div className="min-w-[480px] grid grid-cols-[1.4fr_repeat(3,1fr)] gap-x-3 gap-y-3 items-center">
@@ -173,7 +158,7 @@ function Features() {
               </div>
             </div>
           </div>
-          <div className="card p-5 md:p-6 md:col-span-4 min-w-0">
+          <div className="reveal card p-5 md:p-6 md:col-span-4 min-w-0" style={{ transitionDelay: '120ms' }}>
             <FeatureTitle icon={<Users size={18} />} title="Both sides, one list" body="Bring in the bride’s and groom’s lists, catch duplicates, and group people into families with a coordinator for each side." />
             <ul className="mt-5 grid gap-2 text-[13.5px]">
               {[['Iyer family', 'Bride’s side', 6], ['Malhotra family', 'Groom’s side', 4], ['Subramanian family', 'Bride’s side', 4]].map(([n, s, c]) => (
@@ -182,8 +167,8 @@ function Features() {
             </ul>
           </div>
           <SmallFeature icon={<Smartphone size={18} />} title="One link per family" body="The family elder answers for everyone: functions, travel and rooms. No app, no password." />
-          <SmallFeature icon={<CalendarHeart size={18} />} title="Headcount per function" body="Live numbers for mehendi, sangeet, haldi and the wedding, ready for your caterer." />
-          <SmallFeature icon={<ClipboardList size={18} />} title="Rooming lists for hotels" body="Send each hotel its list, then share the stay page with guests once it’s confirmed." />
+          <SmallFeature icon={<CalendarHeart size={18} />} delay={100} title="Headcount per function" body="Live numbers for mehendi, sangeet, haldi and the wedding, ready for your caterer." />
+          <SmallFeature icon={<ClipboardList size={18} />} delay={200} title="Rooming lists for hotels" body="Send each hotel its list, then share the stay page with guests once it’s confirmed." />
         </div>
       </div>
     </section>
@@ -200,10 +185,10 @@ function Designs() {
           <Link to="/app/invitations/design" className="btn-ghost">See all 10 designs <ArrowUpRight size={16} /></Link>
         </div>
         <div className="mt-10 -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
-          {ids.map((id) => {
+          {ids.map((id, i) => {
             const t = templateById(id)
             return (
-              <figure key={id} className="w-[250px] shrink-0 snap-start md:w-auto min-w-0">
+              <figure key={id} data-speed={['0.04', '-0.04', '0.08', '0'][i]} className="w-[250px] shrink-0 snap-start md:w-auto min-w-0">
                 <div className="invite h-[300px] overflow-hidden rounded-[24px] border border-line shadow-[0_20px_40px_-28px_rgb(var(--ink)/0.5)]" style={templateStyle(t)}>
                   <div className="pt-4"><RsvpHero t={t} bride="Ananya" groom="Rohan" venue="Aravali Lake Resort" city="Udaipur" compact /></div>
                   <GoldDivider className="mx-auto mt-4 h-5 w-[140px]" />
@@ -230,7 +215,7 @@ function Steps() {
             ['Send one invite per family', 'Pick a design and share the link on WhatsApp. Replies come straight into your dashboard.'],
             ['Fit rooms and share stays', 'Place families in your hotel blocks, send rooming lists, and let guests see their room once it’s confirmed.'],
           ].map(([t, b], i) => (
-            <li key={t} className="min-w-0 border-t-2 border-plum/80 pt-5">
+            <li key={t} className="reveal min-w-0 border-t-2 border-plum/80 pt-5" style={{ transitionDelay: `${i * 120}ms` }}>
               <div className="font-display text-[44px] leading-none font-semibold text-gold num">{i + 1}</div>
               <h3 className="mt-3 font-display text-[24px] font-semibold">{t}</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-muted max-w-[40ch]">{b}</p>
@@ -274,12 +259,12 @@ function Faq() {
 
 function Start() {
   const nav = useNavigate()
-  const submit = (e: FormEvent) => { e.preventDefault(); nav('/app') }
+  const submit = (e: FormEvent) => { e.preventDefault(); nav('/register') }
   return (
     <section id="start" className="scroll-mt-20">
       <div className={`${wrap} pb-16 md:pb-24`} style={gutter}>
         <div className="invite relative overflow-hidden rounded-[32px]" style={{ background: 'rgb(62 16 30)', color: 'rgb(255 247 232)' }}>
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center opacity-90" aria-hidden="true">
+          <div data-speed="-0.08" className="pointer-events-none absolute inset-x-0 top-0 flex justify-center opacity-90" aria-hidden="true">
             {Array.from({ length: 4 }, (_, i) => <div key={i} className="w-[320px] shrink-0"><Toran swags={4} /></div>)}
           </div>
           <div className="relative grid gap-10 px-6 pt-24 pb-10 md:px-12 md:pt-28 md:pb-12 lg:grid-cols-[1fr_1fr] lg:items-end">
@@ -287,7 +272,7 @@ function Start() {
               <h2 className="font-display text-[38px] md:text-[54px] leading-[1.02] font-semibold">Start planning your wedding</h2>
               <p className="mt-4 text-[16px] leading-relaxed text-[rgb(255_247_232/0.75)] max-w-[42ch]">Tell us a little about it. You can add functions, hotels and guests right after.</p>
             </div>
-            <form onSubmit={submit} className="grid gap-3 rounded-[24px] bg-bg p-5 text-ink sm:grid-cols-2">
+            <form onSubmit={submit} className="reveal grid gap-3 rounded-[24px] bg-bg p-5 text-ink sm:grid-cols-2">
               <Field label="Your names" className="sm:col-span-2"><input className="input" placeholder="Ananya & Rohan" /></Field>
               <Field label="City"><input className="input" placeholder="Udaipur" /></Field>
               <Field label="Wedding month"><input className="input" type="month" defaultValue="2026-12" /></Field>
@@ -301,8 +286,8 @@ function Start() {
                   ))}
                 </div>
               </Field>
-              <button type="submit" className="btn-primary sm:col-span-2 !py-3 text-[15px]"><Plus size={17} /> Create my wedding</button>
-              <p className="sm:col-span-2 text-center text-[12px] text-muted">Prototype: this opens the sample wedding. Nothing is saved yet.</p>
+              <button type="submit" className="btn-primary sm:col-span-2 !py-3 text-[15px]">Continue <ArrowRight size={17} /></button>
+              <p className="sm:col-span-2 text-center text-[12px] text-muted">Next, create your account. It takes under a minute.</p>
             </form>
           </div>
         </div>
@@ -311,23 +296,9 @@ function Start() {
   )
 }
 
-function Footer() {
-  return (
-    <footer className="border-t border-line">
-      <div className={`${wrap} flex flex-wrap items-center justify-between gap-4 py-8 text-[13px] text-muted`} style={gutter}>
-        <div className="min-w-0"><div className="flex items-center gap-2"><Mark className="h-6 w-6" /><span className="font-display text-[17px] font-semibold text-ink">WeddingStay</span></div><div className="mt-1">Made in India, for big fat Indian weddings.</div></div>
-        <div className="flex gap-4">
-          <Link to="/app" className="hover:text-ink">Sample wedding</Link>
-          <Link to="/g/h02" className="hover:text-ink">Guest view</Link>
-        </div>
-      </div>
-    </footer>
-  )
-}
-
 function SectionHead({ kicker, title }: { kicker: ReactNode; title: string }) {
   return (
-    <div className="min-w-0">
+    <div className="reveal min-w-0">
       <div className="eyebrow uppercase tracking-[0.18em] text-plum">{kicker}</div>
       <h2 className="mt-3 font-display text-[36px] md:text-[50px] leading-[1.02] font-semibold max-w-[20ch]">{title}</h2>
     </div>
@@ -344,8 +315,8 @@ function FeatureTitle({ icon, title, body }: { icon: ReactNode; title: string; b
   )
 }
 
-function SmallFeature(p: { icon: ReactNode; title: string; body: string }) {
-  return <div className="card p-5 md:p-6 md:col-span-4 min-w-0"><FeatureTitle {...p} /></div>
+function SmallFeature({ delay = 0, ...p }: { icon: ReactNode; title: string; body: string; delay?: number }) {
+  return <div className="reveal card p-5 md:p-6 md:col-span-4 min-w-0" style={{ transitionDelay: `${delay}ms` }}><FeatureTitle {...p} /></div>
 }
 
 function Field({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
