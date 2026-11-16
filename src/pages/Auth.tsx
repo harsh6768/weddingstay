@@ -11,10 +11,10 @@ export function Register() {
   const nav = useNavigate()
   const [role, setRole] = useState('Bride')
   const [agree, setAgree] = useState(false)
-  const submit = (e: FormEvent) => { e.preventDefault(); if (agree) nav('/app') }
+  const submit = (e: FormEvent) => { e.preventDefault(); if (agree) nav('/start') }
   return (
     <AuthLayout title="Create your wedding" sub={<>Already have an account? <Link to="/login" className="font-medium text-plum hover:underline">Log in</Link></>}>
-      <GoogleButton label="Sign up with Google" />
+      <GoogleButton label="Sign up with Google" to="/start" />
       <Or />
       <form onSubmit={submit} className="grid gap-4">
         <Field label="Your name"><input className="input" required autoComplete="name" placeholder="Ananya Iyer" /></Field>
@@ -147,10 +147,10 @@ function Password({ label, autoComplete, hint, extra }: { label: string; autoCom
   )
 }
 
-function GoogleButton({ label }: { label: string }) {
+function GoogleButton({ label, to = '/app' }: { label: string; to?: string }) {
   const nav = useNavigate()
   return (
-    <button type="button" onClick={() => nav('/app')} className="btn-ghost w-full !py-3 text-[15px]">
+    <button type="button" onClick={() => nav(to)} className="btn-ghost w-full !py-3 text-[15px]">
       <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" aria-hidden="true">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

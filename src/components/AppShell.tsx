@@ -1,25 +1,17 @@
 import clsx from 'clsx'
-import { BedDouble, CalendarHeart, LayoutGrid, Send, Settings, Users } from 'lucide-react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { BedDouble, CalendarHeart, Home, Settings, Users } from 'lucide-react'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useStore } from '../store'
 import { fmtRange } from '../lib/dates'
 import { SampleBanner } from './ui'
 import { Toran } from './Ornaments'
 
 const nav = [
-  { to: '/app', label: 'Overview', icon: LayoutGrid, end: true },
+  { to: '/app', label: 'Home', icon: Home, end: true },
   { to: '/app/guests', label: 'Guests', icon: Users },
-  { to: '/app/invitations', label: 'Invitations', icon: Send },
+  { to: '/app/rooms', label: 'Rooms', icon: BedDouble },
   { to: '/app/functions', label: 'Functions', icon: CalendarHeart },
-  { to: '/app/accommodation', label: 'Accommodation', icon: BedDouble },
-  { to: '/app/settings', label: 'Settings', icon: Settings },
-]
-
-export const accNav = [
-  { to: '/app/accommodation', label: 'Hotels & rooms', end: true },
-  { to: '/app/accommodation/requirements', label: 'Guest requirements' },
-  { to: '/app/accommodation/allocation', label: 'Room allocation' },
-  { to: '/app/accommodation/rooming', label: 'Rooming lists' },
+  { to: '/app/settings', label: 'Family & settings', icon: Settings },
 ]
 
 export function Mark({ className }: { className?: string }) {
@@ -36,9 +28,7 @@ const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddi
 
 export default function AppShell() {
   const { data } = useStore()
-  const loc = useLocation()
-  const inAcc = loc.pathname.startsWith('/app/accommodation')
-  const days = Math.ceil((Date.parse(data.wedding.startDate) - Date.parse('2026-11-10')) / 864e5)
+    const days = Math.max(0, Math.ceil((Date.parse(data.wedding.startDate) - Date.parse('2026-11-16')) / 864e5))
   return (
     <div className="min-h-full md:flex">
       <aside className="hidden md:flex md:w-[248px] shrink-0 flex-col sticky top-0 h-screen p-3">
@@ -59,25 +49,15 @@ export default function AppShell() {
             {nav.map((n) => (
               <div key={n.to}>
                 <NavLink to={n.to} end={n.end}
-                  className={({ isActive }) => clsx('flex items-center gap-2.5 rounded-full px-3.5 py-2 text-[14px] font-medium transition-colors', isActive || (n.label === 'Accommodation' && inAcc) ? 'bg-ink text-bg' : 'text-muted hover:text-ink hover:bg-sunk')}>
+                  className={({ isActive }) => clsx('flex items-center gap-2.5 rounded-full px-3.5 py-2 text-[14px] font-medium transition-colors', isActive ? 'bg-ink text-bg' : 'text-muted hover:text-ink hover:bg-sunk')}>
                   <n.icon size={17} /> {n.label}
                 </NavLink>
-                {n.label === 'Accommodation' && inAcc && (
-                  <div className="ml-[26px] mt-1 mb-1.5 flex flex-col gap-0.5 border-l border-line pl-2">
-                    {accNav.map((s) => (
-                      <NavLink key={s.to} to={s.to} end={s.end}
-                        className={({ isActive }) => clsx('rounded-full px-3 py-1.5 text-[13px]', isActive ? 'bg-plumsoft text-plum font-medium' : 'text-muted hover:text-ink')}>
-                        {s.label}
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
           </nav>
           <div className="mt-auto m-3 flex items-center gap-2.5 rounded-2xl bg-sunk px-3 py-2.5">
-            <div className="h-8 w-8 rounded-full bg-plum text-onplum grid place-items-center text-[13px] font-semibold">A</div>
-            <div className="min-w-0"><div className="text-[13px] font-medium">Ananya Iyer</div><div className="text-[12px] text-muted">Owner</div></div>
+            <div className="h-8 w-8 rounded-full bg-plum text-onplum grid place-items-center text-[13px] font-semibold">{data.wedding.brideName[0]}</div>
+            <div className="min-w-0"><div className="text-[13px] font-medium">{data.wedding.brideName}</div><div className="text-[12px] text-muted">You</div></div>
           </div>
         </div>
       </aside>
@@ -88,28 +68,21 @@ export default function AppShell() {
           <NavLink to="/" className="flex items-center gap-2"><Mark className="h-6 w-6" /><span className="font-display text-[17px] font-semibold">WeddingStay</span></NavLink>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-plumsoft px-2.5 py-0.5 text-[12px] font-medium text-plum num">{days} days to go</span>
-            <NavLink to="/app/settings" aria-label="Settings" className={({ isActive }) => clsx('grid h-10 w-10 place-items-center rounded-full border border-line', isActive ? 'bg-ink text-bg' : 'bg-surface text-muted')}><Settings size={18} /></NavLink>
+            <NavLink to="/app/settings" aria-label="Family and settings" className={({ isActive }) => clsx('grid h-11 w-11 place-items-center rounded-full border border-line', isActive ? 'bg-ink text-bg' : 'bg-surface text-muted')}><Settings size={18} /></NavLink>
           </div>
         </header>
-        {inAcc && (
-          <div className="md:hidden flex gap-1.5 overflow-x-auto py-2.5" style={gutter}>
-            {accNav.map((s) => (
-              <NavLink key={s.to} to={s.to} end={s.end} className={({ isActive }) => clsx('whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-medium', isActive ? 'bg-ink text-bg' : 'bg-sunk text-muted')}>{s.label}</NavLink>
-            ))}
-          </div>
-        )}
         <main className="mx-auto max-w-[1180px] py-6 md:py-8" style={gutter}>
           <div className="mb-6"><SampleBanner /></div>
           <Outlet />
         </main>
       </div>
 
-      <nav className="md:hidden fixed bottom-3 inset-x-3 z-30 grid grid-cols-5 rounded-full border border-line bg-surface/90 backdrop-blur-xl shadow-[0_12px_30px_-12px_rgb(0_0_0/0.35)]"
+      <nav className="md:hidden fixed bottom-3 inset-x-3 z-30 grid grid-cols-4 rounded-full border border-line bg-surface/90 backdrop-blur-xl shadow-[0_12px_30px_-12px_rgb(0_0_0/0.35)]"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)', marginLeft: 'env(safe-area-inset-left, 0px)', marginRight: 'env(safe-area-inset-right, 0px)' }}>
-        {nav.slice(0, 5).map((n) => (
+        {nav.slice(0, 4).map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end}
-            className={({ isActive }) => clsx('flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium', isActive || (n.label === 'Accommodation' && inAcc) ? 'text-plum' : 'text-muted')}>
-            <n.icon size={19} /> {n.label === 'Accommodation' ? 'Rooms' : n.label}
+            className={({ isActive }) => clsx('flex flex-col items-center gap-0.5 py-2.5 min-h-[58px] justify-center text-[12.5px] font-semibold', isActive ? 'text-plum' : 'text-muted')}>
+            <n.icon size={21} /> {n.label}
           </NavLink>
         ))}
       </nav>

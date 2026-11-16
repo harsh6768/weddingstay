@@ -3,7 +3,8 @@
 import { templateById } from './lib/templates'
 import { createContext, useContext, useMemo, useReducer, type ReactNode } from 'react'
 import { sampleData } from './data/sample'
-import type { AllocationStatus, Guest, InvitationState, RoomAllocation, WeddingData } from './data/types'
+import type { AllocationStatus, Guest, Hotel, Household, InvitationState, RoomAllocation, RoomBlock, RoomType, WeddingData, WeddingFunction } from './data/types'
+import { addDays } from './lib/dates'
 
 type Action =
   | { type: 'allocation/add'; allocation: RoomAllocation; actor: string; note: string }
@@ -15,6 +16,10 @@ type Action =
   | { type: 'wedding/template'; id: string }
   | { type: 'guest/respond'; householdId: string; guests: Guest[] }
   | { type: 'reset' }
+  | { type: 'wedding/create'; brideName: string; groomName: string; city: string; venueName: string; startDate: string; endDate: string; functions: string[] }
+  | { type: 'household/add'; household: Household; guests: Guest[] }
+  | { type: 'function/add'; fn: WeddingFunction }
+  | { type: 'hotel/add'; hotel: Hotel; roomTypes: RoomType[]; blocks: RoomBlock[] }
 
 const now = () => new Date().toISOString()
 const event = (actor: string, action: string, detail: string) => ({ id: `e${Math.random().toString(36).slice(2, 8)}`, at: now(), actor, action, detail })
@@ -52,6 +57,27 @@ function reducer(s: WeddingData, a: Action): WeddingData {
     }
     case 'reset':
       return sampleData
+    case 'wedding/create': {
+      // A fresh, empty wedding: what a new couple sees right after signing up.
+      const days = Math.max(1, Math.round((Date.parse(a.endDate) - Date.parse(a.startDate)) / 864e5) + 1)
+      const functions: WeddingFunction[] = a.functions.map((name, i) => ({
+        id: `f_new${i}`, name, date: addDays(a.startDate, Math.min(i, days - 1)), startTime: name === 'Haldi' ? '10:00' : '18:00', endTime: name === 'Haldi' ? '13:00' : '23:00',
+        venueName: a.venueName || 'Venue to be decided', venueAddress: a.city, isPublished: true,
+      }))
+      return {
+        ...s,
+        wedding: { ...s.wedding, name: `${a.brideName.split(' ')[0]} & ${a.groomName.split(' ')[0]}`, brideName: a.brideName, groomName: a.groomName, city: a.city, venueName: a.venueName || a.city, startDate: a.startDate, endDate: a.endDate, responseDeadline: addDays(a.startDate, -14) },
+        functions, households: [], guests: [], hotels: [], roomTypes: [], blocks: [], allocations: [],
+        members: s.members.filter((m) => m.role === 'OWNER').slice(0, 1).map((m) => ({ ...m, name: a.brideName })),
+        audit: [event(a.brideName, 'Wedding created', `${a.city}, ${a.functions.length} functions`)],
+      }
+    }
+    case 'household/add':
+      return { ...s, households: [...s.households, a.household], guests: [...s.guests, ...a.guests], audit: [event('You', 'Family added', a.household.name), ...s.audit] }
+    case 'function/add':
+      return { ...s, functions: [...s.functions, a.fn].sort((x, y) => (x.date + x.startTime).localeCompare(y.date + y.startTime)) }
+    case 'hotel/add':
+      return { ...s, hotels: [...s.hotels, a.hotel], roomTypes: [...s.roomTypes, ...a.roomTypes], blocks: [...s.blocks, ...a.blocks], audit: [event('You', 'Hotel added', a.hotel.name), ...s.audit] }
   }
 }
 

@@ -40,7 +40,7 @@ export default function RsvpDesign() {
   return (
     <>
       <PageHeader title="RSVP design" subtitle="Pick how your guest link looks. Every family sees the design you choose, and you can change it anytime, even after links are sent."
-        actions={<Link to="/app/invitations" className="btn-ghost">Back to invitations</Link>} />
+        actions={<Link to="/app/guests" className="btn-ghost">Back to guests</Link>} />
       <div className="mb-5 flex gap-1.5 overflow-x-auto" role="tablist">
         {([['all', `All designs (${templates.length})`], ['artistic', 'Artistic & illustrated'], ['modern', 'Classic & modern']] as const).map(([k, label]) => (
           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}

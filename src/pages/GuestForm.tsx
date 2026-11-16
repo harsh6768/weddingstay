@@ -67,6 +67,7 @@ export default function GuestForm() {
   const [showFns, setShowFns] = useState(false)
   const [showTravel, setShowTravel] = useState(false)
   const [message, setMessage] = useState('')
+  const [renamed, setRenamed] = useState<string[]>([])
 
   if (!household) return <GuestFrame><p>This link is no longer active. Please ask the couple for a new one.</p></GuestFrame>
   const family = household.name.replace(/ \(.*\)/, '')
@@ -118,14 +119,18 @@ export default function GuestForm() {
             <p className="mt-1 text-muted">Will the {family} be joining us?</p>
           </div>
           {people.length > 1 && (
-            <button type="button" className="btn-ghost self-center" onClick={() => setPeople((ps) => ps.map((p) => ({ ...p, ...answer(p, 'YES') })))}>
-              <Check size={16} /> Yes, all {people.length} of us are coming
+            <button type="button" className={clsx('w-full !min-h-[52px] text-[16px]', people.every((p) => p.rsvp === 'YES') ? 'btn-primary' : 'btn-ghost !border-plum/40 !text-plum font-semibold')} onClick={() => setPeople((ps) => ps.map((p) => ({ ...p, ...answer(p, 'YES') })))}>
+              <Check size={18} /> Yes, all {people.length} of us are coming
             </button>
           )}
           <div className="card divide-y divide-[rgb(var(--gold)/0.25)]">
             {people.map((p) => (
               <div key={p.id} className="p-4 flex flex-col gap-2.5">
-                <div className="font-semibold text-[15.5px]">{p.firstName} {p.lastName}{p.type === 'CHILD' && <span className="ml-2 text-[12px] font-normal text-muted">child</span>}</div>
+                {/^(Guest|Child) \d+$/.test(p.firstName) || renamed.includes(p.id) ? (
+                  <input className="input" aria-label={p.type === 'CHILD' ? 'Child’s name' : 'Name'} placeholder={p.type === 'CHILD' ? 'Child’s name' : 'Name'}
+                    value={/^(Guest|Child) \d+$/.test(p.firstName) ? '' : `${p.firstName}${p.lastName ? ' ' + p.lastName : ''}`}
+                    onChange={(e) => { if (!renamed.includes(p.id)) setRenamed([...renamed, p.id]); const [f, ...l] = e.target.value.split(' '); set(p.id, { firstName: f, lastName: l.join(' ') }) }} />
+                ) : <div className="font-semibold text-[15.5px]">{p.firstName} {p.lastName}{p.type === 'CHILD' && <span className="ml-2 text-[12px] font-normal text-muted">child</span>}</div>}
                 <Choice name={`Is ${p.firstName} coming`} value={p.rsvp === 'PENDING' ? ('' as Rsvp) : p.rsvp} onChange={(v) => set(p.id, answer(p, v))}
                   options={[{ v: 'YES', label: 'Yes' }, { v: 'NO', label: 'No' }, { v: 'MAYBE', label: 'Not sure' }]} />
               </div>
@@ -169,7 +174,10 @@ export default function GuestForm() {
             <p className="mt-1 text-muted">The couple is arranging hotels for guests coming from out of town.</p>
           </div>
           <Choice size="lg" name="Need a room" value={stay.needs} onChange={(v: NeedsRoom) => setStay({ needs: v })}
-            options={[{ v: 'YES', label: 'Yes please' }, { v: 'NO', label: 'No' }, { v: 'UNSURE', label: 'Not sure' }]} />
+            options={[{ v: 'YES', label: 'Yes please' }, { v: 'NO', label: 'No, thanks' }, { v: 'UNSURE', label: 'Not sure' }]} />
+          {stay.needs === 'NO' && !showTravel ? (
+            <button type="button" className="self-center min-h-[44px] text-[14px] font-medium text-plum" onClick={() => setShowTravel(true)}>+ Tell us when you arrive (optional)</button>
+          ) : (
           <div className="card p-4 flex flex-col gap-3">
             <div className="font-semibold">When are you in {data.wedding.city}?</div>
             <div className="grid grid-cols-2 gap-3">
@@ -192,6 +200,7 @@ export default function GuestForm() {
               </div>
             )}
           </div>
+          )}
           {stay.needs === 'YES' && (
             <div><label htmlFor="special" className="label">Anything we should know? (optional)</label><input id="special" className="input" placeholder="e.g. ground floor for grandparents" value={stay.special ?? ''} onChange={(e) => setStay({ special: e.target.value })} /></div>
           )}
@@ -223,13 +232,13 @@ export default function GuestForm() {
       <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex gap-3 border-t border-line/70 bg-bg/90 px-4 pt-3 backdrop-blur-xl sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:backdrop-blur-none" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
         {step > 0 && <button type="button" className="btn-ghost" onClick={() => go(step === 2 && !anyComing ? 0 : step - 1)} aria-label="Back"><ArrowLeft size={16} /></button>}
         {step < 2 ? (
-          <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={next} disabled={blocked} style={{ opacity: blocked ? 0.5 : 1 }}>Continue <ArrowRight size={16} /></button>
+          <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={next} disabled={blocked} style={{ opacity: blocked ? 0.5 : 1 }}>Next <ArrowRight size={16} /></button>
         ) : (
-          <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={submit}>Send RSVP</button>
+          <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={submit}>Send our reply</button>
         )}
       </div>
       {step === 0 && unanswered && <p className="mt-2 text-center text-[12.5px] text-muted">Pick an answer for each person to continue.</p>}
-      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/invitations" className="underline">Back to the couple's dashboard</Link> (prototype only)</p>
+      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/guests" className="underline">Back to the couple's dashboard</Link> (prototype only)</p>
     </GuestFrame>
   )
 }

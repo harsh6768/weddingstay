@@ -1,20 +1,17 @@
 import { useEffect } from 'react'
 import { HashRouter, MemoryRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import AppShell from './components/AppShell'
-import Allocation from './pages/Allocation'
 import Functions from './pages/Functions'
 import GuestForm from './pages/GuestForm'
 import GuestStay, { GuestDone } from './pages/GuestStay'
 import Guests from './pages/Guests'
-import Hotels from './pages/Hotels'
-import Invitations from './pages/Invitations'
 import Landing from './pages/Landing'
 import { Login, Register } from './pages/Auth'
 import { Privacy, Terms } from './pages/Legal'
-import Overview from './pages/Overview'
-import Requirements from './pages/Requirements'
-import Rooming from './pages/Rooming'
+import Home from './pages/Home'
+import Rooms from './pages/Rooms'
 import RsvpDesign from './pages/RsvpDesign'
+import Start from './pages/Start'
 import Settings from './pages/Settings'
 import { StoreProvider } from './store'
 
@@ -38,16 +35,15 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/start" element={<Start />} />
           <Route path="/app" element={<AppShell />}>
-            <Route index element={<Overview />} />
+            <Route index element={<Home />} />
             <Route path="guests" element={<Guests />} />
-            <Route path="invitations" element={<Invitations />} />
+            <Route path="invitations" element={<Navigate to="/app/guests" replace />} />
             <Route path="invitations/design" element={<RsvpDesign />} />
             <Route path="functions" element={<Functions />} />
-            <Route path="accommodation" element={<Hotels />} />
-            <Route path="accommodation/requirements" element={<Requirements />} />
-            <Route path="accommodation/allocation" element={<Allocation />} />
-            <Route path="accommodation/rooming" element={<Rooming />} />
+            <Route path="rooms" element={<Rooms />} />
+            <Route path="accommodation/*" element={<Navigate to="/app/rooms" replace />} />
             <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="/g/:householdId" element={<GuestForm />} />

@@ -133,8 +133,80 @@ export function Empty({ icon, title, body, action }: { icon: ReactNode; title: s
 
 export function SampleBanner() {
   return (
-    <div className="rounded-2xl sm:rounded-full border border-marigold/35 bg-marigold/10 px-4 py-2 sm:py-1.5 text-[12.5px] text-ink inline-block">
-      <span className="font-semibold">Sample data.</span> &nbsp;Names and bookings are made up. Changes reset when you reload.
+    <div className="inline-block rounded-full border border-marigold/35 bg-marigold/10 px-3.5 py-1 text-[12.5px] text-ink">
+      <span className="font-semibold">Preview</span> · sample data, nothing is saved
+    </div>
+  )
+}
+
+/** Filter chips: one tap, no dropdowns. */
+export function Chips<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { v: T; label: string; count?: number }[]; label: string }) {
+  return (
+    <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0" role="tablist" aria-label={label}>
+      {options.map((o) => (
+        <button key={o.v} type="button" role="tab" aria-selected={value === o.v} onClick={() => onChange(o.v)}
+          className={clsx('shrink-0 whitespace-nowrap rounded-full border px-3.5 min-h-[44px] text-[14px] font-medium transition-colors',
+            value === o.v ? 'border-ink bg-ink text-bg' : 'border-line bg-surface text-ink hover:bg-sunk')}>
+          {o.label}{o.count !== undefined && <span className={clsx('ml-1.5 num', value === o.v ? 'opacity-70' : 'text-muted')}>{o.count}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Big tappable choice buttons, used for side, yes/no and similar questions. */
+export function Choices<T extends string>({ value, onChange, options, label, cols }: { value: T | ''; onChange: (v: T) => void; options: { v: T; label: string; sub?: string }[]; label: string; cols?: number }) {
+  return (
+    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols ?? options.length}, minmax(0, 1fr))` }} role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button key={o.v} type="button" role="radio" aria-checked={value === o.v} onClick={() => onChange(o.v)}
+          className={clsx('rounded-2xl border px-3 py-2.5 min-h-[52px] text-center transition-colors',
+            value === o.v ? 'border-plum bg-plumsoft text-plum shadow-[0_0_0_1px_rgb(var(--plum))_inset]' : 'border-line bg-surface text-ink hover:bg-sunk')}>
+          <div className="text-[15px] font-semibold leading-tight">{o.label}</div>
+          {o.sub && <div className="mt-0.5 text-[12.5px] opacity-75">{o.sub}</div>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function Stepper({ value, onChange, label, min = 0, max = 20 }: { value: number; onChange: (n: number) => void; label: string; min?: number; max?: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-3 py-2">
+      <span className="text-[15px] font-medium">{label}</span>
+      <div className="flex items-center gap-3">
+        <button type="button" className="grid h-11 w-11 place-items-center rounded-full border border-line text-[22px] leading-none disabled:opacity-40" onClick={() => onChange(value - 1)} disabled={value <= min} aria-label={`Fewer ${label}`}>−</button>
+        <span className="w-6 text-center font-display text-[22px] font-semibold num" aria-live="polite">{value}</span>
+        <button type="button" className="grid h-11 w-11 place-items-center rounded-full border border-line text-[22px] leading-none disabled:opacity-40" onClick={() => onChange(value + 1)} disabled={value >= max} aria-label={`More ${label}`}>+</button>
+      </div>
+    </div>
+  )
+}
+
+export function WhatsAppIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" fill="currentColor">
+      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.1-1.2l-.4-.2Z" />
+    </svg>
+  )
+}
+
+/** The green WhatsApp button. Opens WhatsApp with the message ready; the person presses send there. */
+export function WhatsAppButton({ href, children, onClick, className, small }: { href: string; children: ReactNode; onClick?: () => void; className?: string; small?: boolean }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" onClick={onClick}
+      className={clsx('inline-flex items-center justify-center gap-2 rounded-full bg-[#1f9d55] font-semibold text-white shadow-[0_8px_20px_-10px_rgb(31_157_85/0.8)] transition active:scale-[0.98] hover:brightness-110',
+        small ? 'min-h-[44px] px-4 text-[14px]' : 'min-h-[52px] px-5 text-[16px]', className)}>
+      <WhatsAppIcon size={small ? 17 : 20} /> {children}
+    </a>
+  )
+}
+
+/** A WhatsApp-style preview of the message the person is about to send. */
+export function ChatBubble({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl bg-[#e7f7dc] p-3 text-[14px] leading-relaxed text-[#1b2b1b] whitespace-pre-line shadow-sm dark:bg-[#1f3a2a] dark:text-[#e3f2e3]">
+      {text}
     </div>
   )
 }

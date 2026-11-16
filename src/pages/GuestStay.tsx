@@ -22,7 +22,7 @@ export function GuestDone() {
           <Link to={`/g/${householdId}${search}`} className="btn-ghost">Edit our reply</Link>
         </div>
       </div>
-      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/invitations" className="underline">See it on the couple's dashboard</Link> ({h?.name} now shows as responded)</p>
+      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/guests" className="underline">See it on the couple's dashboard</Link> ({h?.name} now shows as responded)</p>
     </GuestFrame>
   )
 }
@@ -83,7 +83,7 @@ export default function GuestStay() {
           </li>
         ))}
       </ol>
-      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/accommodation/rooming" className="underline">Back to rooming lists</Link> (prototype only)</p>
+      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/rooms?show=given" className="underline">Back to rooms</Link> (prototype only)</p>
     </GuestFrame>
   )
 }
