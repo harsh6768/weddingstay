@@ -234,7 +234,8 @@ One-time setup:
 **Settings** (`/app/settings`)
 - Your private link, with copy and "Send it to myself on WhatsApp".
 - Wedding details (couple, city, dates, when replies close), the invite design, and start a new wedding.
-- *Preview only for now:* "Who's helping" (inviting parents or cousins) and "Edit wedding details" aren't saved yet.
+- To let parents or cousins help, the couple shares the same private link (there are no separate helper accounts yet). The demo shows a sample "Who's helping" list of what that could look like.
+- *Preview only for now:* "Edit wedding details" isn't saved yet.
 
 ### For each family (guest link `#/g/<familyId>`)
 - No login. The link only works for that family, and it can only change that family's own reply.
