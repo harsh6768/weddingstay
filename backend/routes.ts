@@ -19,9 +19,14 @@ export const routes: [method: string, path: string, handler: Handler][] = [
   ['GET', '/weddings/:id/team', team.get],
   ['POST', '/weddings/:id/invites', team.invite],
   ['DELETE', '/weddings/:id/invites/:code', team.cancelInvite],
-  ['DELETE', '/weddings/:id/members/:userId', team.remove],
+  ['DELETE', '/weddings/:id/members/:memberId', team.remove],
   ['GET', '/join/:code', team.inviteInfo],
   ['POST', '/join/:code', team.join],
+  // A helper who chose not to sign in: their personal link
+  ['POST', '/join/:code/link', team.joinWithLink],
+  ['GET', '/h/:link', weddings.getByLink],
+  ['POST', '/h/:link', weddings.changeByLink],
+  ['GET', '/h/:link/team', team.getByLink],
   // A family's guest link
   ['GET', '/g/:familyId', guests.getInvite],
   ['POST', '/g/:familyId', guests.reply],

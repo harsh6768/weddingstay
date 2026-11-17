@@ -18,17 +18,22 @@ grant usage on schema public to weddingstay_api;
 grant select, insert, update on weddings to weddingstay_api;
 revoke all on weddings from anon, authenticated; -- Supabase's public API roles
 
--- Who can manage a wedding after signing in with Google. user_id is Supabase Auth's user id (the token's `sub`).
+-- Who can manage a wedding besides its private link: the couple and their helpers.
+-- A member either signed in with Google (user_id = Supabase Auth's user id, the token's `sub`)
+-- or chose not to sign in and opens it with their own personal link (link_token, /h/<token>).
 -- side: null = the whole wedding; BRIDE or GROOM = only that side's families (plus families shared by both).
 create table if not exists members (
+  id uuid primary key default gen_random_uuid(),
   wedding_id uuid not null references weddings(id) on delete cascade,
-  user_id uuid not null,
-  name text not null,
-  email text not null,
+  user_id uuid,
+  link_token text unique,
+  name text not null check (length(name) between 1 and 60),
+  email text,
   role text not null check (role in ('OWNER', 'HELPER')),
   side text check (side in ('BRIDE', 'GROOM')),
   created_at timestamptz not null default now(),
-  primary key (wedding_id, user_id)
+  unique (wedding_id, user_id),
+  check (user_id is not null or (link_token is not null and role = 'HELPER'))
 );
 create index if not exists members_user on members (user_id);
 
@@ -36,7 +41,7 @@ create index if not exists members_user on members (user_id);
 create table if not exists invites (
   code text primary key,
   wedding_id uuid not null references weddings(id) on delete cascade,
-  name text not null,
+  name text not null check (length(name) between 1 and 60),
   side text check (side in ('BRIDE', 'GROOM')),
   created_at timestamptz not null default now(),
   used_at timestamptz

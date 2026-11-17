@@ -41,6 +41,7 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/start" element={<Start />} />
           <Route path="/w/:token" element={<OpenWedding />} />
+          <Route path="/h/:token" element={<OpenWedding helper />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/app" element={<AppShell />}>
             <Route index element={<Home />} />

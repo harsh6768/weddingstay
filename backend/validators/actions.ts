@@ -21,6 +21,11 @@ export function validateCoupleAction(a: Action): Action {
   if (!coupleActions.has(a.type)) throw new AppError(400, 'That change isn’t allowed.')
   // A family's id is their guest link, so it must be hard to guess (see newId).
   if (a.type === 'household/add' && !(isStr(a.household?.id, 40) && a.household.id.length >= 12)) throw new AppError(400, 'That change isn’t allowed.')
+  // Sizes a real family or hotel never exceeds; stops one request from bloating the wedding.
+  if (a.type === 'household/add' && !(isStr(a.household.name, 80) && a.household.name.trim() && Array.isArray(a.guests) && a.guests.length >= 1 && a.guests.length <= 40
+    && a.guests.every((g) => g && g.householdId === a.household.id))) throw new AppError(400, 'Please check the family’s name and number of people (1 to 40).')
+  if (a.type === 'guest/respond' && !(Array.isArray(a.guests) && a.guests.length <= 40)) throw new AppError(400, 'That reply has too many people.')
+  if (a.type === 'hotel/add' && !(isStr(a.hotel?.name, 80) && a.hotel.name.trim() && Array.isArray(a.roomTypes) && a.roomTypes.length <= 20)) throw new AppError(400, 'Please check the hotel’s name and room types.')
   return a
 }
 

@@ -1,30 +1,49 @@
-// Data access for who manages a wedding (members) and their invite links (invites).
+// Data access for who manages a wedding (members) and their one-time invite links (invites).
 import { sql } from '../db'
 import type { User } from '../auth'
 
 export type Role = 'OWNER' | 'HELPER'
 export type HelperSide = 'BRIDE' | 'GROOM' | null
-export interface MemberRow { userId: string; name: string; email: string; role: Role; side: HelperSide }
+/** signedIn: false = a helper who opens the wedding with their personal link instead of Google. */
+export interface MemberRow { id: string; weddingId: string; name: string; email: string | null; role: Role; side: HelperSide; signedIn: boolean }
 export interface InviteRow { code: string; name: string; side: HelperSide; createdAt: string }
 
-const INVITE_DAYS = 14
+export const INVITE_DAYS = 14
+export const MAX_TEAM = 30 // helpers + open invites per wedding
+
+const member = sql`id, wedding_id as "weddingId", name, email, role, side, user_id is not null as "signedIn"`
 
 export async function findMember(weddingId: string, userId: string): Promise<MemberRow | undefined> {
-  const [m] = await sql<MemberRow[]>`select user_id as "userId", name, email, role, side from members where wedding_id = ${weddingId} and user_id = ${userId}`
+  const [m] = await sql<MemberRow[]>`select ${member} from members where wedding_id = ${weddingId} and user_id = ${userId}`
   return m
 }
 
-/** Adds the person, or makes an existing helper the owner. Never turns an owner into a helper. */
+export async function findByLink(linkToken: string): Promise<MemberRow | undefined> {
+  const [m] = await sql<MemberRow[]>`select ${member} from members where link_token = ${linkToken}`
+  return m
+}
+
+/** Adds a signed-in person, or makes an existing helper the owner. Never turns an owner into a helper. */
 export async function addMember(weddingId: string, user: User, name: string, role: Role, side: HelperSide): Promise<void> {
-  await sql`insert into members (wedding_id, user_id, name, email, role, side) values (${weddingId}, ${user.id}, ${name}, ${user.email}, ${role}, ${side})
+  await sql`insert into members (wedding_id, user_id, name, email, role, side) values (${weddingId}, ${user.id}, ${name.slice(0, 60)}, ${user.email}, ${role}, ${side})
     on conflict (wedding_id, user_id) do update set role = 'OWNER', side = null where excluded.role = 'OWNER'`
 }
 
-export const listMembers = (weddingId: string) =>
-  sql<MemberRow[]>`select user_id as "userId", name, email, role, side from members where wedding_id = ${weddingId} order by role desc, created_at`
+export async function addLinkHelper(weddingId: string, linkToken: string, name: string, side: HelperSide): Promise<void> {
+  await sql`insert into members (wedding_id, link_token, name, role, side) values (${weddingId}, ${linkToken}, ${name}, 'HELPER', ${side})`
+}
 
-export async function removeHelper(weddingId: string, userId: string): Promise<boolean> {
-  return (await sql`delete from members where wedding_id = ${weddingId} and user_id = ${userId} and role = 'HELPER'`).count > 0
+export const listMembers = (weddingId: string) =>
+  sql<MemberRow[]>`select ${member} from members where wedding_id = ${weddingId} order by role desc, created_at`
+
+export async function removeHelper(weddingId: string, memberId: string): Promise<boolean> {
+  return (await sql`delete from members where wedding_id = ${weddingId} and id = ${memberId} and role = 'HELPER'`).count > 0
+}
+
+export async function teamSize(weddingId: string): Promise<number> {
+  const [r] = await sql<{ n: number }[]>`select (select count(*) from members where wedding_id = ${weddingId} and role = 'HELPER')
+    + (select count(*) from invites where wedding_id = ${weddingId} and used_at is null and created_at > now() - make_interval(days => ${INVITE_DAYS})) as n`
+  return Number(r.n)
 }
 
 export const weddingsOf = (userId: string) =>
@@ -41,8 +60,8 @@ export const listInvites = (weddingId: string) =>
   sql<InviteRow[]>`select code, name, side, created_at as "createdAt" from invites
     where wedding_id = ${weddingId} and used_at is null and created_at > now() - make_interval(days => ${INVITE_DAYS}) order by created_at`
 
-export async function deleteInvite(weddingId: string, code: string): Promise<void> {
-  await sql`delete from invites where wedding_id = ${weddingId} and code = ${code}`
+export async function deleteInvite(weddingId: string, code: string): Promise<boolean> {
+  return (await sql`delete from invites where wedding_id = ${weddingId} and code = ${code} and used_at is null`).count > 0
 }
 
 /** An invite that can still be used, with the wedding's name. */

@@ -1,17 +1,26 @@
-// Signed-in people: their weddings, who helps with a wedding, and invite links. Business rules only; no HTTP, no SQL.
+// Who manages a wedding: signed-in people's weddings, helpers, and their invite links. Business rules only; no HTTP, no SQL.
 import { newId } from '../../shared/reducer'
 import type { User } from '../auth'
 import { AppError } from '../errors'
 import * as team from '../repositories/teamRepository'
 import * as weddings from '../repositories/weddingRepository'
-import type { HelperSide } from '../repositories/teamRepository'
+import { isUuid, secretOr404, validateInvite } from '../validators/team'
 
-const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
+const NOT_YOURS = 'This wedding isn’t in your account.'
+const BAD_INVITE = 'This invite link has been used or has expired. Ask the couple for a new one.'
+const BAD_LINK = 'This helper link isn’t working any more. Ask the couple to send you a new invite.'
 
 /** The caller's place in a wedding; 404 if they aren't part of it (so ids can't be probed). */
-export async function membership(weddingId: string, user: User) {
+export async function membership(weddingId: string, user: User): Promise<team.MemberRow> {
   const m = isUuid(weddingId) ? await team.findMember(weddingId, user.id) : undefined
-  if (!m) throw new AppError(404, 'This wedding isn’t in your account.')
+  if (!m) throw new AppError(404, NOT_YOURS)
+  return m
+}
+
+/** A helper who didn't sign in, by their personal link. */
+export async function linkHelper(linkToken: string): Promise<team.MemberRow> {
+  const m = await team.findByLink(secretOr404(linkToken, BAD_LINK))
+  if (!m) throw new AppError(404, BAD_LINK)
   return m
 }
 
@@ -31,42 +40,53 @@ export async function claim(token: string, user: User) {
   return { id: row.id }
 }
 
-export async function getTeam(weddingId: string, user: User) {
-  const me = await membership(weddingId, user)
-  return { me, members: await team.listMembers(weddingId), invites: me.role === 'OWNER' ? await team.listInvites(weddingId) : [] }
+/** Everyone on the wedding. Open invites only for the couple. */
+async function teamOf(me: team.MemberRow) {
+  return { me, members: await team.listMembers(me.weddingId), invites: me.role === 'OWNER' ? await team.listInvites(me.weddingId) : [] }
 }
+export const getTeam = async (weddingId: string, user: User) => teamOf(await membership(weddingId, user))
+export const getTeamByLink = async (linkToken: string) => teamOf(await linkHelper(linkToken))
 
-export async function invite(weddingId: string, user: User, input: { name?: unknown; side?: unknown }) {
+export async function invite(weddingId: string, user: User, input: Record<string, unknown>) {
   await ownerOf(weddingId, user)
-  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 80) : ''
-  const side = (input.side === 'BRIDE' || input.side === 'GROOM' ? input.side : null) as HelperSide
-  if (!name) throw new AppError(400, 'Please add their name.')
+  const { name, side } = validateInvite(input)
+  if ((await team.teamSize(weddingId)) >= team.MAX_TEAM) throw new AppError(400, `A wedding can have up to ${team.MAX_TEAM} helpers. Remove someone or cancel an invite first.`)
   const code = newId() + newId() // ~120 random bits, used once
   await team.createInvite(code, weddingId, name, side)
-  return { code }
+  return { code, expiresInDays: team.INVITE_DAYS }
 }
 
 export async function cancelInvite(weddingId: string, user: User, code: string) {
   await ownerOf(weddingId, user)
-  await team.deleteInvite(weddingId, code)
+  if (!(await team.deleteInvite(weddingId, secretOr404(code, 'That invite isn’t open any more.')))) throw new AppError(404, 'That invite isn’t open any more.')
   return { ok: true }
 }
 
-export async function removeHelper(weddingId: string, user: User, userId: string) {
+export async function removeHelper(weddingId: string, user: User, memberId: string) {
   await ownerOf(weddingId, user)
-  if (!(await team.removeHelper(weddingId, userId))) throw new AppError(404, 'That helper isn’t on this wedding.')
+  if (!isUuid(memberId) || !(await team.removeHelper(weddingId, memberId))) throw new AppError(404, 'That helper isn’t on this wedding.')
   return { ok: true }
 }
 
 export async function inviteInfo(code: string) {
-  const i = await team.findOpenInvite(code)
-  if (!i) throw new AppError(404, 'This invite link has been used or has expired. Ask the couple for a new one.')
+  const i = await team.findOpenInvite(secretOr404(code, BAD_INVITE))
+  if (!i) throw new AppError(404, BAD_INVITE)
   return { weddingName: i.weddingName, name: i.name, side: i.side }
 }
 
+/** Join with Google. */
 export async function join(code: string, user: User) {
-  const i = await team.useInvite(code)
-  if (!i) throw new AppError(404, 'This invite link has been used or has expired. Ask the couple for a new one.')
+  const i = await team.useInvite(secretOr404(code, BAD_INVITE))
+  if (!i) throw new AppError(404, BAD_INVITE)
   await team.addMember(i.weddingId, user, i.name, 'HELPER', i.side) // an owner opening it stays the owner
   return { id: i.weddingId }
+}
+
+/** Join without signing in: the helper gets their own personal link instead. */
+export async function joinWithLink(code: string) {
+  const i = await team.useInvite(secretOr404(code, BAD_INVITE))
+  if (!i) throw new AppError(404, BAD_INVITE)
+  const link = newId() + newId() // ~120 random bits, like the couple's private link
+  await team.addLinkHelper(i.weddingId, link, i.name, i.side)
+  return { link }
 }

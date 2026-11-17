@@ -47,6 +47,12 @@ describe.skipIf(!process.env.DATABASE_URL)('google sign-in and helpers', () => {
     expect((await as('not-a-token')('GET', '/me/weddings')).status).toBe(401)
     expect((await stranger('POST', `/weddings/${id}/invites`, { name: 'X' })).status).toBe(404)
 
+    // Invites are checked.
+    expect((await couple('POST', `/weddings/${id}/invites`, { name: '  ' })).status).toBe(400)
+    expect((await couple('POST', `/weddings/${id}/invites`, { name: 'x'.repeat(61) })).status).toBe(400)
+    expect((await couple('POST', `/weddings/${id}/invites`, { name: 'Ok', side: 'MUTUAL' })).status).toBe(400)
+    expect((await anon('GET', '/join/short')).status).toBe(404)
+
     // The couple invites the bride's mother for the bride's side.
     const { code } = (await couple('POST', `/weddings/${id}/invites`, { name: 'Sunita (bride’s mother)', side: 'BRIDE' })).body
     expect(code).toHaveLength(24)
@@ -74,10 +80,25 @@ describe.skipIf(!process.env.DATABASE_URL)('google sign-in and helpers', () => {
     // The team: the couple sees everyone, then removes her.
     const t = (await couple('GET', `/weddings/${id}/team`)).body
     expect(t.members.map((m: { role: string }) => m.role)).toEqual(['OWNER', 'HELPER'])
-    const helperId = t.members[1].userId
-    expect((await couple('DELETE', `/weddings/${id}/members/${t.members[0].userId}`)).status).toBe(404) // owners can't be removed
+    const helperId = t.members[1].id
+    expect((await couple('DELETE', `/weddings/${id}/members/${t.members[0].id}`)).status).toBe(404) // owners can't be removed
     expect((await couple('DELETE', `/weddings/${id}/members/${helperId}`)).status).toBe(200)
     expect((await mummy('GET', `/weddings/${id}`)).status).toBe(404)
+
+    // A helper who doesn't want to sign in joins with a personal link instead.
+    const { code: c2 } = (await couple('POST', `/weddings/${id}/invites`, { name: 'Vikram bhaiya', side: 'GROOM' })).body
+    const { link } = (await anon('POST', `/join/${c2}/link`)).body
+    expect(link).toHaveLength(24)
+    expect((await anon('POST', `/join/${c2}/link`)).status).toBe(404) // used once
+    const hv = (await anon('GET', `/h/${link}`)).body
+    expect(hv.households.map((h: Household) => h.id).sort()).toEqual([both, groom].sort())
+    expect((await anon('POST', `/h/${link}`, { type: 'invitation/state', householdId: groom, state: 'SENT' })).status).toBe(200)
+    expect((await anon('POST', `/h/${link}`, { type: 'invitation/state', householdId: bride, state: 'SENT' })).status).toBe(403)
+    expect((await anon('GET', `/h/${link}/team`)).body.me).toMatchObject({ role: 'HELPER', side: 'GROOM', signedIn: false })
+    expect((await anon('GET', `/h/${'a'.repeat(24)}`)).status).toBe(404)
+    const vikram = (await couple('GET', `/weddings/${id}/team`)).body.members.find((m: { name: string }) => m.name === 'Vikram bhaiya')
+    expect((await couple('DELETE', `/weddings/${id}/members/${vikram.id}`)).status).toBe(200)
+    expect((await anon('GET', `/h/${link}`)).status).toBe(404) // removing them turns the link off
 
     // Whoever has the private link can save the wedding to their account.
     expect((await stranger('POST', `/w/${created.body.token}/claim`)).body).toEqual({ id })

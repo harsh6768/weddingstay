@@ -20,18 +20,18 @@ export function Centered({ children }: { children: ReactNode }) {
 
 export const Loading = ({ text = 'Opening your wedding…' }: { text?: string }) => <Centered><p className="mt-4 text-[16px] text-muted" role="status">{text}</p></Centered>
 
-/** /w/:token, the couple's private link. */
-export function OpenWedding() {
+/** /w/:token, the couple's private link; /h/:link, a helper's personal link. */
+export function OpenWedding({ helper = false }: { helper?: boolean }) {
   const { token = '' } = useParams()
-  const { openWedding } = useStore()
+  const { openWedding, openHelper } = useStore()
   const nav = useNavigate()
-  const [failed, setFailed] = useState(false)
-  useEffect(() => { openWedding(token).then(() => nav('/app', { replace: true }), () => setFailed(true)) }, [token, openWedding, nav])
+  const [failed, setFailed] = useState('')
+  useEffect(() => { (helper ? openHelper : openWedding)(token).then(() => nav('/app', { replace: true }), (e) => setFailed(e.message)) }, [token, helper, openWedding, openHelper, nav])
   if (!failed) return <Loading />
   return (
     <Centered>
       <h1 className="mt-4 font-display text-[28px] font-semibold">This link didn’t open a wedding</h1>
-      <p className="mt-2 text-muted">Please check you copied the whole link. If your internet is slow, try again in a minute.</p>
+      <p className="mt-2 text-muted">{helper && /helper link/.test(failed) ? failed : 'Please check you copied the whole link. If your internet is slow, try again in a minute.'}</p>
       <div className="mt-6 flex flex-col gap-2"><button className="btn-primary !min-h-[50px]" onClick={() => location.reload()}>Try again</button><Link to="/" className="btn-ghost !min-h-[50px]">Go to home page</Link></div>
     </Centered>
   )
@@ -61,17 +61,19 @@ export function useCopy() {
   return { copied, copy }
 }
 
-/** The couple's private link, with ways to keep it safe. Shown right after creating a wedding and in Settings. */
+/** The couple's private link (or a helper's personal link), with ways to keep it safe. Shown right after creating or joining, and in Settings. */
 export function PrivateLinkCard() {
-  const { token, data } = useStore()
+  const { token, helperLink, data } = useStore()
   const { copied, copy } = useCopy()
-  if (!token) return null
-  const link = appLink(`/w/${token}`)
-  const msg = `Our wedding on WeddingStay (${data.wedding.name}). Private link, don’t share it:\n${link}`
+  if (!token && !helperLink) return null
+  const link = appLink(helperLink ? `/h/${helperLink}` : `/w/${token}`)
+  const msg = `${helperLink ? 'My link for helping with' : 'Our wedding on WeddingStay'} (${data.wedding.name}). Private link, don’t share it:\n${link}`
   return (
     <div className="card p-5 text-left">
-      <div className="flex items-center gap-2 font-semibold text-[16px]"><Lock size={17} className="text-plum" /> Your private link</div>
-      <p className="mt-1 text-[14.5px] text-muted">This link opens your wedding. Anyone who has it can see and change your guest list, so only share it with family who are helping you plan.</p>
+      <div className="flex items-center gap-2 font-semibold text-[16px]"><Lock size={17} className="text-plum" /> {helperLink ? 'Your personal link' : 'Your private link'}</div>
+      <p className="mt-1 text-[14.5px] text-muted">{helperLink
+        ? 'This link is only for you. It opens the families you’re helping with, so please don’t forward it. If you lose it, ask the couple to send you a new invite.'
+        : 'This link opens your wedding. Anyone who has it can see and change your guest list, so only share it with family who are helping you plan.'}</p>
       <div className="mt-3 break-all rounded-xl bg-sunk px-3 py-2.5 text-[13.5px] font-medium select-all">{link}</div>
       <div className="mt-3 grid gap-2">
         <WhatsAppButton href={`https://wa.me/?text=${encodeURIComponent(msg)}`}>Send it to myself on WhatsApp</WhatsAppButton>
@@ -85,14 +87,15 @@ export function PrivateLinkCard() {
 export function SaveLink() {
   const [sp] = useSearchParams()
   const { mode } = useStore()
-  if (mode !== 'host') return <Navigate to="/app" replace />
+  if (mode !== 'host' && mode !== 'helper') return <Navigate to="/app" replace />
+  const helper = mode === 'helper'
   return (
     <div className="mx-auto max-w-[480px]">
-      <h1 className="font-display text-[32px] leading-[1.1] font-semibold">{sp.get('new') ? 'Your wedding is saved 🎉' : 'Your private link'}</h1>
-      <p className="mt-2 text-[15.5px] text-muted">There’s no password. You open your wedding with this link, so please keep it somewhere safe. The easiest way is to send it to yourself on WhatsApp.</p>
+      <h1 className="font-display text-[32px] leading-[1.1] font-semibold">{helper ? (sp.get('new') ? 'You’re in 🎉' : 'Your personal link') : sp.get('new') ? 'Your wedding is saved 🎉' : 'Your private link'}</h1>
+      <p className="mt-2 text-[15.5px] text-muted">There’s no password. You open {helper ? 'the wedding' : 'your wedding'} with this link, so please keep it somewhere safe. The easiest way is to send it to yourself on WhatsApp.</p>
       <div className="mt-5"><PrivateLinkCard /></div>
-      <p className="mt-3 text-[13.5px] text-muted">On this phone, WeddingStay will open your wedding by itself. You’ll need the link on a new phone or computer.</p>
-      <Link to="/app" className="btn-primary mt-5 w-full !min-h-[52px] text-[16px]">Done, take me to my wedding</Link>
+      <p className="mt-3 text-[13.5px] text-muted">On this phone, WeddingStay will open the wedding by itself. You’ll need the link on a new phone or computer.</p>
+      <Link to="/app" className="btn-primary mt-5 w-full !min-h-[52px] text-[16px]">{helper ? 'Done, open the wedding' : 'Done, take me to my wedding'}</Link>
     </div>
   )
 }

@@ -116,13 +116,16 @@ export function MyWeddings() {
 export function Join() {
   const { code = '' } = useParams()
   const { session, ready } = useSession()
-  const { openMember } = useStore()
+  const { openMember, openHelper } = useStore()
   const nav = useNavigate()
   const [invite, setInvite] = useState<{ weddingName: string; name: string; side: string | null } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   useEffect(() => { api(`/join/${code}`).then(setInvite, (e) => setError(e.message)) }, [code])
-  const join = () => { setBusy(true); api(`/join/${code}`, {}).then(({ id }) => openMember(id)).then(() => nav('/app', { replace: true }), (e) => { setError(e.message); setBusy(false) }) }
+  const fail = (e: Error) => { setError(e.message); setBusy(false) }
+  const join = () => { setBusy(true); api(`/join/${code}`, {}).then(({ id }) => openMember(id)).then(() => nav('/app', { replace: true }), fail) }
+  // No sign-in: the server gives this helper their own personal link, which we then show them to keep.
+  const joinWithLink = () => { setBusy(true); api(`/join/${code}/link`, {}).then(({ link }) => openHelper(link)).then(() => nav('/app/link?new=1', { replace: true }), fail) }
   if (!ready || (!invite && !error)) return <Loading text="Opening your invite…" />
   return (
     <Centered>
@@ -133,10 +136,17 @@ export function Join() {
           {session ? <>
             <button className="btn-primary w-full !min-h-[52px] text-[16px]" disabled={busy} onClick={join}>{busy ? 'Joining…' : 'Join and open the wedding'}</button>
             <p className="mt-2 text-[13.5px] text-muted">Signed in as {userName(session)}. <button className="underline" onClick={() => signOut()}>Not you?</button></p>
-          </> : <>
-            <GoogleButton next={`/join/${code}`} />
-            <p className="mt-2 text-[13.5px] text-muted">So it’s only you who can open it, sign in with your Google account.</p>
-          </>}
+          </> : <div className="grid gap-3 text-left">
+            <div>
+              <GoogleButton next={`/join/${code}`} />
+              <p className="mt-1.5 text-[13.5px] text-muted">Recommended. Opens on any phone, and the wedding stays in your account.</p>
+            </div>
+            <div className="flex items-center gap-3 text-[13px] text-muted"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
+            <div>
+              <button className="btn-ghost w-full !min-h-[52px] text-[16px]" disabled={busy} onClick={joinWithLink}>{busy ? 'Joining…' : 'Continue without signing in'}</button>
+              <p className="mt-1.5 text-[13.5px] text-muted">You’ll get your own personal link instead. Keep it safe: it works only on the phone you save it on, and if you lose it the couple can send you a new invite.</p>
+            </div>
+          </div>}
         </div>
       </> : <h1 className="mt-4 font-display text-[26px] font-semibold">This invite isn’t working</h1>}
       {error && <p className="mt-3 text-[15px] text-bad" role="alert">{error}</p>}

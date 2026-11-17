@@ -125,6 +125,7 @@ function GuestList({ onImport }: { onImport: () => void }) {
 }
 
 function Header({ onAdd, onImport, sub }: { onAdd: () => void; onImport: () => void; sub: string }) {
+  const { access } = useStore()
   return (
     <div className="mb-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -136,7 +137,7 @@ function Header({ onAdd, onImport, sub }: { onAdd: () => void; onImport: () => v
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
         <button className="btn-ghost !min-h-[48px] !px-3 text-[14px]" onClick={onImport}><Upload size={16} className="shrink-0" /> Import from Google Form</button>
-        <Link to="/app/invitations/design" className="btn-ghost !min-h-[48px] !px-3 text-[14px]"><Palette size={16} className="shrink-0" /> Invite design</Link>
+        {access.role === 'OWNER' && <Link to="/app/invitations/design" className="btn-ghost !min-h-[48px] !px-3 text-[14px]"><Palette size={16} className="shrink-0" /> Invite design</Link>}
       </div>
     </div>
   )
@@ -197,15 +198,23 @@ function FamilySheet({ id, onClose }: { id: string | null; onClose: () => void }
 }
 
 function AddFamily({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { data, dispatch } = useStore()
+  const { data, dispatch, access } = useStore()
   const [name, setName] = useState('')
+  // A helper for one side adds families on that side (or shared by both).
+  const sides = (['BRIDE', 'GROOM', 'MUTUAL'] as const).filter((v) => !access.side || v === access.side || v === 'MUTUAL')
   const [side, setSide] = useState<Side | ''>('')
   const [contact, setContact] = useState('')
   const [phone, setPhone] = useState('')
   const [adults, setAdults] = useState(2)
   const [kids, setKids] = useState(0)
   const [saved, setSaved] = useState<Household | null>(null)
-  const ok = name.trim() && side && contact.trim()
+  const digits = phone.replace(/\D/g, '')
+  const errors = {
+    name: name.trim().length > 80 ? 'Please keep the family name under 80 letters.' : '',
+    contact: contact.trim().length > 60 ? 'Please keep the name under 60 letters.' : '',
+    phone: digits && !/^[6-9]\d{9}$/.test(digits) ? 'Please enter a 10-digit Indian mobile number, like 98765 43210.' : '',
+  }
+  const ok = name.trim() && side && contact.trim() && !errors.name && !errors.contact && !errors.phone
   const reset = () => { setName(''); setSide(''); setContact(''); setPhone(''); setAdults(2); setKids(0); setSaved(null) }
   const close = () => { reset(); onClose() }
 
@@ -215,7 +224,7 @@ function AddFamily({ open, onClose }: { open: boolean; onClose: () => void }) {
     const last = rest.join(' ') || name.trim().split(' ')[0]
     const mk = (i: number, child: boolean): Guest => ({
       id: `${id}_g${i + 1}`, householdId: id, firstName: i === 0 ? first : child ? `Child ${i - adults + 1}` : `Guest ${i + 1}`, lastName: i === 0 ? last : '',
-      phone: i === 0 && phone ? `+91 ${phone}` : undefined, type: child ? 'CHILD' : 'ADULT', side: side as Side, relationship: '', tags: [], rsvp: 'PENDING', attendance: {}, stay: { needs: 'UNSURE' }, travel: {},
+      phone: i === 0 && digits ? `+91 ${digits.slice(0, 5)} ${digits.slice(5)}` : undefined, type: child ? 'CHILD' : 'ADULT', side: side as Side, relationship: '', tags: [], rsvp: 'PENDING', attendance: {}, stay: { needs: 'UNSURE' }, travel: {},
     })
     const guests = Array.from({ length: adults + kids }, (_, i) => mk(i, i >= adults))
     const household: Household = { id, name: name.trim(), side: side as Side, city: '', primaryContactId: guests[0].id, invitation: 'NOT_SENT' }
@@ -232,7 +241,7 @@ function AddFamily({ open, onClose }: { open: boolean; onClose: () => void }) {
         <p className="mt-1 text-[14px] text-muted">Send them the invite now? This is the message they’ll get:</p>
         <div className="mt-3"><ChatBubble text={inviteText(data, h)} /></div>
         <div className="mt-4 grid gap-2">
-          <WhatsAppButton href={waUrl(phone, inviteText(data, h))} onClick={() => dispatch({ type: 'invitation/state', householdId: h.id, state: 'SENT' })}>Send on WhatsApp</WhatsAppButton>
+          <WhatsAppButton href={waUrl(digits, inviteText(data, h))} onClick={() => dispatch({ type: 'invitation/state', householdId: h.id, state: 'SENT' })}>Send on WhatsApp</WhatsAppButton>
           <button className="btn-ghost !min-h-[48px]" onClick={() => reset()}><Plus size={16} /> Add another family</button>
           <button className="min-h-[44px] text-[14px] text-muted underline" onClick={close}>Later</button>
         </div>
@@ -242,15 +251,17 @@ function AddFamily({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Modal open onClose={close} title="Add a family">
       <div className="grid gap-4">
-        <div><label htmlFor="fam" className="label !text-[14px]">Family name</label><input id="fam" className="input !min-h-[50px] !text-[16px]" placeholder="e.g. Sharma family (Jaipur)" value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div><label htmlFor="fam" className="label !text-[14px]">Family name</label><input id="fam" className="input !min-h-[50px] !text-[16px]" placeholder="e.g. Sharma family (Jaipur)" value={name} aria-invalid={!!errors.name} onChange={(e) => setName(e.target.value)} />{errors.name && <p className="mt-1 text-[13px] text-bad" role="alert">{errors.name}</p>}</div>
         <div>
           <div className="label !text-[14px]">Whose side?</div>
-          <Choices label="Whose side" value={side} onChange={setSide} options={[{ v: 'BRIDE', label: 'Bride’s', sub: sideHint.BRIDE }, { v: 'GROOM', label: 'Groom’s', sub: sideHint.GROOM }, { v: 'MUTUAL', label: 'Both', sub: 'Friends' }]} />
+          <Choices label="Whose side" value={side} onChange={setSide} options={[{ v: 'BRIDE' as const, label: 'Bride’s', sub: sideHint.BRIDE }, { v: 'GROOM' as const, label: 'Groom’s', sub: sideHint.GROOM }, { v: 'MUTUAL' as const, label: 'Both', sub: 'Friends' }].filter((o) => sides.includes(o.v))} />
+          {access.side && <p className="mt-1.5 text-[13px] text-muted">You’re helping with {access.side === 'BRIDE' ? 'the bride’s' : 'the groom’s'} side, so you can add families on that side or shared by both.</p>}
         </div>
-        <div><label htmlFor="contact" className="label !text-[14px]">Who should we send it to?</label><input id="contact" className="input !min-h-[50px] !text-[16px]" placeholder="e.g. Rajesh Sharma" value={contact} onChange={(e) => setContact(e.target.value)} /></div>
+        <div><label htmlFor="contact" className="label !text-[14px]">Who should we send it to?</label><input id="contact" className="input !min-h-[50px] !text-[16px]" placeholder="e.g. Rajesh Sharma" value={contact} aria-invalid={!!errors.contact} onChange={(e) => setContact(e.target.value)} />{errors.contact && <p className="mt-1 text-[13px] text-bad" role="alert">{errors.contact}</p>}</div>
         <div>
           <label htmlFor="phone" className="label !text-[14px]">Their WhatsApp number</label>
-          <div className="flex gap-2"><span className="input !w-auto shrink-0 !min-h-[50px] text-muted">+91</span><input id="phone" className="input !min-h-[50px] !text-[16px]" inputMode="tel" placeholder="98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+          <div className="flex gap-2"><span className="input !w-auto shrink-0 !min-h-[50px] text-muted">+91</span><input id="phone" className="input !min-h-[50px] !text-[16px]" inputMode="tel" placeholder="98765 43210" value={phone} aria-invalid={!!errors.phone} onChange={(e) => setPhone(e.target.value)} /></div>
+          {errors.phone ? <p className="mt-1 text-[13px] text-bad" role="alert">{errors.phone}</p> : <p className="mt-1 text-[13px] text-muted">Optional. We use it to open WhatsApp with the invite.</p>}
         </div>
         <div>
           <div className="label !text-[14px]">How many people?</div>

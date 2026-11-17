@@ -7,16 +7,17 @@ import { functionHeadcount } from '../lib/stats'
 import { useStore } from '../store'
 
 export default function Functions() {
-  const { data, dispatch } = useStore()
+  const { data, dispatch, access } = useStore()
+  const owner = access.role === 'OWNER'
   const [adding, setAdding] = useState(false)
   return (
     <div className="mx-auto max-w-[760px]">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-[34px] md:text-[40px] leading-[1.05] font-semibold">Functions</h1>
-          <p className="mt-0.5 text-[15px] text-muted">Guests say which ones they’re coming to.</p>
+          <p className="mt-0.5 text-[15px] text-muted">{owner ? 'Guests say which ones they’re coming to.' : 'Guests say which ones they’re coming to. Only the couple can change functions.'}</p>
         </div>
-        <button className="btn-primary w-full !min-h-[52px] text-[16px] sm:w-auto" onClick={() => setAdding(true)}><Plus size={18} /> Add a function</button>
+        {owner && <button className="btn-primary w-full !min-h-[52px] text-[16px] sm:w-auto" onClick={() => setAdding(true)}><Plus size={18} /> Add a function</button>}
       </div>
       <ul className="grid gap-3">
         {data.functions.map((f) => {
@@ -34,14 +35,14 @@ export default function Functions() {
                 </div>
                 {f.isPublished && data.guests.length > 0 && <div className="text-right"><div className="font-display text-[28px] font-semibold leading-none num">{h.yes}</div><div className="text-[12.5px] text-muted">coming</div></div>}
               </div>
-              <label className="mt-3 flex min-h-[48px] cursor-pointer items-center justify-between gap-3 rounded-2xl bg-sunk/70 px-3.5">
+              {owner && <label className="mt-3 flex min-h-[48px] cursor-pointer items-center justify-between gap-3 rounded-2xl bg-sunk/70 px-3.5">
                 <span className="text-[14.5px]">{f.isPublished ? 'Guests can see this' : 'Hidden from guests'}</span>
                 <span className="relative inline-flex">
                   <input type="checkbox" className="peer sr-only" checked={f.isPublished} onChange={(e) => dispatch({ type: 'function/publish', id: f.id, published: e.target.checked })} />
                   <span className="h-7 w-12 rounded-full bg-line transition-colors peer-checked:bg-good" />
                   <span className="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
                 </span>
-              </label>
+              </label>}
             </li>
           )
         })}
