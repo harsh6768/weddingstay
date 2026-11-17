@@ -48,13 +48,12 @@ function GuestList({ onImport }: { onImport: () => void }) {
   if (fams.length === 0) {
     return (
       <>
-        <Header onAdd={() => setAdding(true)} sub="Nobody added yet" />
+        <Header onAdd={() => setAdding(true)} onImport={onImport} sub="Nobody added yet" />
         <section className="card mx-auto max-w-[560px] px-6 py-10 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-plumsoft text-plum"><Users size={30} /></div>
           <h2 className="mt-4 font-display text-[26px] font-semibold leading-tight">Add the families you’re inviting</h2>
           <p className="mx-auto mt-2 max-w-[38ch] text-[15px] text-muted">Add one family at a time: a name, whose side, and a WhatsApp number. They’ll fill in the rest themselves.</p>
           <button className="btn-primary mt-6 w-full !min-h-[52px] text-[16px]" onClick={() => setAdding(true)}><Plus size={18} /> Add a family</button>
-          <button className="btn-ghost mt-2.5 w-full !min-h-[48px]" onClick={onImport}><Upload size={16} /> I have replies in a Google Form</button>
         </section>
         <AddFamily open={adding} onClose={() => setAdding(false)} />
       </>
@@ -64,7 +63,7 @@ function GuestList({ onImport }: { onImport: () => void }) {
   const bulk = show === 'not-sent' || show === 'waiting' ? list : []
   return (
     <>
-      <Header onAdd={() => setAdding(true)} sub={`${fams.length} families · ${data.guests.length} people`} />
+      <Header onAdd={() => setAdding(true)} onImport={onImport} sub={`${fams.length} families · ${data.guests.length} people`} />
 
       <div className="mb-3 flex gap-2">
         <label className="relative flex-1">
@@ -116,10 +115,6 @@ function GuestList({ onImport }: { onImport: () => void }) {
       </ul>
       {list.length === 0 && <p className="mt-10 text-center text-[15px] text-muted">{show === 'waiting' || show === 'not-sent' ? 'Nobody here. Everyone has their invite and has replied. 🎉' : 'No families match.'}</p>}
 
-      <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[14px]">
-        <button className="inline-flex min-h-[44px] items-center gap-1.5 font-medium text-plum" onClick={onImport}><Upload size={16} /> Add replies from a Google Form</button>
-        <Link to="/app/invitations/design" className="inline-flex min-h-[44px] items-center gap-1.5 font-medium text-plum"><Palette size={16} /> Change invite design</Link>
-      </div>
 
       <FamilySheet id={open} onClose={() => setOpen(null)} />
       <AddFamily open={adding} onClose={() => { setAdding(false); if (sp.get('add')) setSp({}, { replace: true }) }} />
@@ -128,14 +123,20 @@ function GuestList({ onImport }: { onImport: () => void }) {
   )
 }
 
-function Header({ onAdd, sub }: { onAdd: () => void; sub: string }) {
+function Header({ onAdd, onImport, sub }: { onAdd: () => void; onImport: () => void; sub: string }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="font-display text-[34px] md:text-[40px] leading-[1.05] font-semibold">Guests</h1>
-        <p className="mt-0.5 text-[15px] text-muted">{sub}</p>
+    <div className="mb-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[34px] md:text-[40px] leading-[1.05] font-semibold">Guests</h1>
+          <p className="mt-0.5 text-[15px] text-muted">{sub}</p>
+        </div>
+        <button className="btn-primary w-full !min-h-[52px] text-[16px] sm:w-auto" onClick={onAdd}><Plus size={18} /> Add a family</button>
       </div>
-      <button className="btn-primary w-full !min-h-[52px] text-[16px] sm:w-auto" onClick={onAdd}><Plus size={18} /> Add a family</button>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+        <button className="btn-ghost !min-h-[48px] !px-3 text-[14px]" onClick={onImport}><Upload size={16} className="shrink-0" /> Import from Google Form</button>
+        <Link to="/app/invitations/design" className="btn-ghost !min-h-[48px] !px-3 text-[14px]"><Palette size={16} className="shrink-0" /> Invite design</Link>
+      </div>
     </div>
   )
 }
