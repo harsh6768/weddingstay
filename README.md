@@ -57,11 +57,38 @@ npm run build:preview  # one self-contained HTML file of the demo in dist-previe
 ### How the backend works
 
 - **API docs:** with `npm run dev` running, open http://localhost:5173/api/docs (Swagger UI) to see and try every endpoint.
-- `backend/api.ts` is the whole API. On Netlify it runs as a function (`backend/functions/api.mts`); in `npm run dev` Vite runs the same file.
-  - `POST /api/weddings`: create a wedding, returns its private token
-  - `GET /api/w/<token>` / `POST /api/w/<token>`: the couple reads or changes their wedding
-  - `GET /api/g/<family id>` / `POST /api/g/<family id>`: one family reads its invite or sends its reply
-- Each wedding is one row in the `weddings` table (`backend/schema.sql`). Every change runs `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
+The backend is layered; each request goes down the layers and back:
+
+```
+backend/
+  api.ts                    entry: finds the route, turns errors into responses
+  routes.ts                 every endpoint: method + path -> controller
+  controllers/              HTTP only: read the request, call a service, send JSON
+    weddingController.ts      couple's endpoints
+    guestController.ts        a family's guest-link endpoints
+    docsController.ts         Swagger UI + OpenAPI
+  services/                 business rules, no HTTP and no SQL
+    weddingService.ts         create / read / change a wedding
+    guestService.ts           what a family may see, sending its reply
+  validators/actions.ts     what each kind of link is allowed to send
+  repositories/             data access, the only place with SQL
+    weddingRepository.ts
+  db.ts                     database connection (DATABASE_URL)
+  http.ts, errors.ts        response helpers, AppError (status + message)
+  openapi.ts                the API description for /api/docs
+  functions/api.mts         Netlify Function wrapper around api.ts
+```
+
+Endpoints (all under `/api`):
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| POST | `/weddings` | anyone | create a wedding, returns its private token |
+| GET / POST | `/w/<token>` | the couple | read / change their wedding |
+| GET / POST | `/g/<family id>` | one family | read its invite / send its reply |
+| GET | `/docs`, `/openapi.json` | developers | Swagger UI and the spec |
+
+Each wedding is one row in the `weddings` table (`backend/schema.sql`). Every change is an action applied by `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
 
 ## Deploy on Netlify
 
