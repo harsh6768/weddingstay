@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
-import type { AllocationStatus, BlockStatus, InvitationState, Rsvp } from '../data/types'
+import type { AllocationStatus, BlockStatus, InvitationState, Rsvp } from '../../shared/types'
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (

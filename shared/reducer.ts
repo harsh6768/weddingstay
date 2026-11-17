@@ -1,8 +1,8 @@
 // The one place wedding data changes. Runs in the browser and, for saved weddings, on the server too,
 // so both sides always agree on what an action does.
 import { templateById } from './templates'
-import { sampleData } from '../data/sample'
-import type { AllocationStatus, Guest, Hotel, Household, InvitationState, RoomAllocation, RoomBlock, RoomType, WeddingData, WeddingFunction } from '../data/types'
+import { sampleData } from './sample'
+import type { AllocationStatus, Guest, Hotel, Household, InvitationState, RoomAllocation, RoomBlock, RoomType, WeddingData, WeddingFunction } from './types'
 import { addDays } from './dates'
 
 /** Hard-to-guess id: guest links are /g/<household id>, so these must not be guessable. */

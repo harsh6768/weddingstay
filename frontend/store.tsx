@@ -3,9 +3,9 @@
 //   host  - a real wedding opened with its private link; every change is saved on the server
 //   guest - one family's invite, opened from their guest link
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { sampleData } from './data/sample'
-import type { WeddingData } from './data/types'
-import { reducer, type Action } from './lib/reducer'
+import { sampleData } from '../shared/sample'
+import type { WeddingData } from '../shared/types'
+import { reducer, type Action } from '../shared/reducer'
 
 type Mode = 'demo' | 'host' | 'guest'
 type Status = 'ready' | 'loading' | 'missing'

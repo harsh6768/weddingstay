@@ -1,4 +1,4 @@
-// Front-end types that mirror the draft Prisma schema (docs/schema.prisma).
+// Data types shared by the app and the API. They mirror the draft Prisma schema (backend/schema.prisma).
 // Dates are ISO strings: 'YYYY-MM-DD' for date-only fields.
 
 export type Side = 'BRIDE' | 'GROOM' | 'MUTUAL' | 'OTHER'

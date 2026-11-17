@@ -5,7 +5,7 @@ import { Diya, FunctionsRibbon, Jharokha, MehndiVine, Petals, ScallopEdge } from
 import { GoldDivider, Mandala, Toran } from '../components/Ornaments'
 import { SiteFooter, SiteHeader, gutter, useParallax, useScrollToState, wrap } from '../components/Site'
 import RsvpHero from '../components/RsvpHero'
-import { templateById, templateStyle } from '../lib/templates'
+import { templateById, templateStyle } from '../../shared/templates'
 
 const d = (ms: number) => ({ animationDelay: `${ms}ms` })
 

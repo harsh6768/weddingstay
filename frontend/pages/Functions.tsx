@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { MapPin, Plus, Shirt } from 'lucide-react'
 import { useState } from 'react'
 import { Modal } from '../components/ui'
-import { addDays, fmtDow, fmtTime } from '../lib/dates'
+import { addDays, fmtDow, fmtTime } from '../../shared/dates'
 import { functionHeadcount } from '../lib/stats'
 import { useStore } from '../store'
 

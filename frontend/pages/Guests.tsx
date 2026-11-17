@@ -3,11 +3,11 @@ import { ArrowRight, Check, ChevronRight, FileSpreadsheet, Palette, Phone, Plus,
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ChatBubble, Chips, Choices, Modal, Pill, Stepper, WhatsAppButton } from '../components/ui'
-import type { Guest, Household, Side } from '../data/types'
+import type { Guest, Household, Side } from '../../shared/types'
 import { familyInfo, inviteText, reminderText, replyText, sideHint, sideName, waUrl, type ReplyState } from '../lib/family'
 import { shortRange } from '../lib/family'
 import { useStore } from '../store'
-import { newId } from '../lib/reducer'
+import { newId } from '../../shared/reducer'
 
 // Guests and invitations in one place. The unit is a family: add a family, send them their link on
 // WhatsApp, see who's coming. No tables, no dropdown filters.

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { sampleData } from '../data/sample'
-import type { RoomAllocation } from '../data/types'
+import { sampleData } from '../../shared/sample'
+import type { RoomAllocation } from '../../shared/types'
 import { detectConflicts, roomTypeNights, validateAllocation } from './accommodation'
-import { nightsOf } from './dates'
+import { nightsOf } from '../../shared/dates'
 
 describe('nightsOf', () => {
   it('includes check-in and excludes check-out', () => {

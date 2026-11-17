@@ -3,9 +3,9 @@ import { AlertTriangle, ArrowRight, BedDouble, Check, CheckCircle2, Download, Ho
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Chips, Modal, Stepper, WhatsAppButton } from '../components/ui'
-import type { Guest, Household, RoomAllocation, RoomType } from '../data/types'
+import type { Guest, Household, RoomAllocation, RoomType } from '../../shared/types'
 import { capacityOf, roomTypeNights, validateAllocation } from '../lib/accommodation'
-import { addDays, fmtDay, nightsOf } from '../lib/dates'
+import { addDays, fmtDay, nightsOf } from '../../shared/dates'
 import { familyInfo, roomStage, shortRange, stayText, waUrl, type RoomStage } from '../lib/family'
 import { useStore } from '../store'
 

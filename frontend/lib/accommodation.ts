@@ -1,6 +1,6 @@
 // Night-wise availability and conflict detection. Pure functions so they can move to the server unchanged.
-import type { Guest, RoomAllocation, RoomBlock, RoomType, WeddingData } from '../data/types'
-import { nightsOf, overlaps } from './dates'
+import type { Guest, RoomAllocation, RoomBlock, RoomType, WeddingData } from '../../shared/types'
+import { nightsOf, overlaps } from '../../shared/dates'
 
 /** Blocks that count as allocatable inventory. PLANNED and REQUESTED are reported separately. */
 export const ALLOCATABLE = new Set(['HELD', 'CONFIRMED'])

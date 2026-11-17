@@ -1,7 +1,7 @@
 // Plain-language helpers for the host screens. One place decides how a family's
 // progress is described, so Home, Guests and Rooms always say the same thing.
-import type { Household, RoomAllocation, Side, WeddingData } from '../data/types'
-import { fmtDay } from './dates'
+import type { Household, RoomAllocation, Side, WeddingData } from '../../shared/types'
+import { fmtDay } from '../../shared/dates'
 
 export const sideName: Record<Side, string> = { BRIDE: 'Bride’s side', GROOM: 'Groom’s side', MUTUAL: 'Both sides', OTHER: 'Friends' }
 export const sideHint: Record<Side, string> = { BRIDE: 'Ladkiwale', GROOM: 'Ladkewale', MUTUAL: 'Common friends', OTHER: 'Other' }

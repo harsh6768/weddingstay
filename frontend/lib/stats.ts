@@ -1,4 +1,4 @@
-import type { WeddingData } from '../data/types'
+import type { WeddingData } from '../../shared/types'
 
 export function guestStats(d: WeddingData) {
   const g = d.guests

@@ -1,6 +1,6 @@
 import { CheckCircle2, Clock, MapPin, Phone } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { fmtDay, fmtDow, fmtTime } from '../lib/dates'
+import { fmtDay, fmtDow, fmtTime } from '../../shared/dates'
 import { coupleName } from '../lib/family'
 import { useStore } from '../store'
 import { GuestFrame, useRsvpDesign } from './GuestForm'

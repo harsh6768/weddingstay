@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import RsvpHero from '../components/RsvpHero'
 import { PageHeader, Pill } from '../components/ui'
-import { templates, templateStyle, type RsvpTemplate } from '../lib/templates'
+import { templates, templateStyle, type RsvpTemplate } from '../../shared/templates'
 import { useStore } from '../store'
-import { fmtRange } from '../lib/dates'
+import { fmtRange } from '../../shared/dates'
 
 /** A live, scaled-down guest page in the given design. */
 function MiniRsvp({ t }: { t: RsvpTemplate }) {

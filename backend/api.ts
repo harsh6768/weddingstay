@@ -4,9 +4,9 @@
 //   /api/g/<household id>   one family's guest link: read their invite, send their own reply
 // Each wedding is one row; changes run the app's own reducer inside a locked transaction.
 import postgres from 'postgres'
-import { sampleData } from '../data/sample'
-import type { Guest, WeddingData } from '../data/types'
-import { newId, reducer, type Action } from '../lib/reducer'
+import { sampleData } from '../shared/sample'
+import type { Guest, WeddingData } from '../shared/types'
+import { newId, reducer, type Action } from '../shared/reducer'
 
 declare const process: { env: Record<string, string | undefined> }
 const sql = postgres(process.env.DATABASE_URL ?? '', { prepare: false, max: 1, idle_timeout: 20 })

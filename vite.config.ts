@@ -9,7 +9,7 @@ const devApi = (): Plugin => ({
     server.middlewares.use('/api', async (req, res) => {
       const chunks: Buffer[] = []
       for await (const c of req) chunks.push(c as Buffer)
-      const { default: api } = await server.ssrLoadModule('/src/server/api.ts')
+      const { default: api } = await server.ssrLoadModule('/backend/api.ts')
       const r: Response = await api(new Request(`http://localhost/api${req.url}`, { method: req.method, headers: req.headers as HeadersInit, body: req.method === 'GET' ? undefined : Buffer.concat(chunks) }))
       res.writeHead(r.status, Object.fromEntries(r.headers)).end(await r.text())
     })

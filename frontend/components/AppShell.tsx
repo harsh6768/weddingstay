@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Loading } from '../pages/Open'
 import { savedToken, useStore } from '../store'
-import { fmtRange } from '../lib/dates'
+import { fmtRange } from '../../shared/dates'
 import { SampleBanner } from './ui'
 import { Toran } from './Ornaments'
 

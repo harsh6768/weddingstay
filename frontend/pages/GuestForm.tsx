@@ -3,9 +3,9 @@ import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import RsvpHero from '../components/RsvpHero'
-import { templateById, templateStyle } from '../lib/templates'
-import type { Guest, NeedsRoom, Rsvp, TravelMode } from '../data/types'
-import { addDays, fmtDay, fmtDow, fmtRange, fmtTime } from '../lib/dates'
+import { templateById, templateStyle } from '../../shared/templates'
+import type { Guest, NeedsRoom, Rsvp, TravelMode } from '../../shared/types'
+import { addDays, fmtDay, fmtDow, fmtRange, fmtTime } from '../../shared/dates'
 import { useStore } from '../store'
 
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }

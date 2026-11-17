@@ -1,9 +1,9 @@
-// Runs against a real Postgres when DATABASE_URL is set (see db/schema.sql); skipped otherwise.
+// Runs against a real Postgres when DATABASE_URL is set (see backend/schema.sql); skipped otherwise.
 import { describe, expect, it } from 'vitest'
 import api from './api'
 
 declare const process: { env: Record<string, string | undefined> }
-import type { Guest, Household } from '../data/types'
+import type { Guest, Household } from '../shared/types'
 
 const call = async (path: string, body?: unknown) => {
   const r = await api(new Request(`http://x/api${path}`, body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }))

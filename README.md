@@ -18,9 +18,9 @@ Requires Node 20+.
 
 ### Saving real weddings
 
-Without a database the app still runs as the sample demo. To save real weddings, run `db/schema.sql` once on a Postgres database (we use Supabase), then put `DATABASE_URL` for the `weddingstay_api` role in `.env.local` (see `.env.example`) and run `npm run dev`: the app and its API both run at http://localhost:5173. With `DATABASE_URL` set, `npm test` also runs the API tests against it.
+Without a database the app still runs as the sample demo. To save real weddings, run `backend/schema.sql` once on a Postgres database (we use Supabase), then put `DATABASE_URL` for the `weddingstay_api` role in `.env.local` (see `.env.example`) and run `npm run dev`: the app and its API both run at http://localhost:5173. With `DATABASE_URL` set, `npm test` also runs the API tests against it.
 
-There are no accounts yet. Creating a wedding gives the couple a private link (`#/w/<token>`) that opens it; each family's guest link (`#/g/<id>`) can only send that family's reply. The server is one Netlify Function (`src/server/api.ts`) that keeps each wedding as one row and runs the same reducer as the app (`src/lib/reducer.ts`).
+There are no accounts yet. Creating a wedding gives the couple a private link (`#/w/<token>`) that opens it; each family's guest link (`#/g/<id>`) can only send that family's reply. The server is one Netlify Function (`backend/api.ts`) that keeps each wedding as one row and runs the same reducer as the app (`shared/reducer.ts`).
 
 ## Deploy on Netlify
 
@@ -44,19 +44,27 @@ One-time setup:
 | Accommodation | Hotels and night-wise inventory, Guest requirements, Room allocation with live validation, Rooming lists and publishing to guests |
 | Guest link (no login) | `/g/<household>` RSVP form per person and per function, travel, stay; confirmation; `/g/<household>/stay` stay details |
 
-Sample wedding: Ananya & Rohan, Udaipur, 11 to 13 Dec 2026, 32 families, 3 hotels. All names and bookings are invented (`src/data/sample.ts`).
+Sample wedding: Ananya & Rohan, Udaipur, 11 to 13 Dec 2026, 32 families, 3 hotels. All names and bookings are invented (`shared/sample.ts`).
 
 ## Layout
 
 ```
-src/
-  data/types.ts         types that mirror docs/schema.prisma
-  data/sample.ts        deterministic sample wedding
-  lib/accommodation.ts  night-wise availability + conflict detection (pure, server-ready)
-  lib/dates.ts          date-only helpers; check-in included, check-out excluded
-  store.tsx             in-memory store; actions map to the planned API
+frontend/               everything people see (React + Tailwind)
   pages/                one file per screen
-docs/schema.prisma      draft PostgreSQL schema for the backend milestones
+  components/           shared UI, ornaments, invite designs
+  lib/                  screen helpers (family, accommodation, stats)
+  store.tsx             app state; sends each change to the API
+backend/                everything on the server
+  api.ts                the API: /api/weddings, /api/w/<token>, /api/g/<family>
+  api.test.ts           API tests (run when DATABASE_URL is set)
+  functions/api.mts     Netlify Function entry
+  schema.sql            the database table (run once on Supabase)
+  schema.prisma         older draft schema, for reference
+shared/                 used by both sides
+  reducer.ts            every change to a wedding (runs in the app and on the server)
+  types.ts              the wedding data shape
+  sample.ts             the sample wedding
+  dates.ts, templates.ts
 ```
 
 ## Rules carried from the product blueprint
@@ -68,4 +76,4 @@ docs/schema.prisma      draft PostgreSQL schema for the backend milestones
 
 ## Next
 
-Backend APIs and the database (Next.js route handlers or a separate API, PostgreSQL + Prisma) once the screens are signed off.
+Accounts and login, so a couple can get back in without their private link.

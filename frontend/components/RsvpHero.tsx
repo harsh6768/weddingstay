@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { ILLUSTRATED, type RsvpTemplate } from '../lib/templates'
+import { ILLUSTRATED, type RsvpTemplate } from '../../shared/templates'
 import { LoveBirds, PandaKoala, Peacock, RoyalElephants } from './Illustrations'
 import { Arch, DecoFan, GoldDivider, Mandala, Monogram, PopConfetti, Sprig, Toran } from './Ornaments'
 
