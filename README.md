@@ -35,7 +35,7 @@ Open `.env.local` and set `DATABASE_URL` to one of these:
   ```
   and use `DATABASE_URL=postgres://weddingstay_api:dev@localhost:5432/postgres`.
 
-`.env.local` is never committed. On a new database, run `backend/schema.sql` once first (the Supabase one is set up for you).
+`.env.local` is never committed. A new database needs `backend/schema.sql` run on it once.
 
 **3. Start frontend and backend together**
 
