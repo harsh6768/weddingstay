@@ -58,9 +58,9 @@ export default function ImportSheet({ open, onClose }: { open: boolean; onClose:
   const departureOf = (r: SheetRow) => fix[r.line] ?? (r.departureBeforeArrival ? undefined : r.departure)
 
   const save = () => {
-    const stamp = Date.now().toString(36)
     for (const r of fresh) {
-      const id = `hs${stamp}${r.line}`
+      // shortcut: same as newId('h') on the backend branch; use that once it merges. The id is the guest link, so it must be random.
+      const id = 'h' + Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('')
       const names = splitNames(r.name)
       const out = departureOf(r)
       const dated = r.coming !== 'NO' && !!r.arrival && !!out
