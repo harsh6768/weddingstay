@@ -2,25 +2,65 @@
 
 Couple-first wedding guest and accommodation management for Indian weddings: one private link per family for RSVPs, travel and stay dates, then hotel rooms assigned night by night with conflict checks.
 
-This repository currently holds the **front-end prototype with sample data**. There is no backend or database yet; everything runs in the browser and resets on reload.
+The app has a **frontend** (what people see, in `frontend/`) and a **backend** (the API and database, in `backend/`). Code both need lives in `shared/`. There are no accounts yet: creating a wedding gives the couple a private link (`#/w/<token>`), and each family gets a guest link (`#/g/<id>`) that can only send that family's reply.
 
-## Run it
+## Run it on your computer
+
+You need **Node 20 or newer** (`node -v` to check).
+
+**1. Get the code and install**
 
 ```bash
+git clone https://github.com/harsh6768/weddingstay
+cd weddingstay
 npm install
-npm run dev          # http://localhost:5173
-npm test             # allocation and availability logic
-npm run build        # static site in dist/
-npm run build:preview  # one self-contained HTML file in dist-preview/
 ```
 
-Requires Node 20+.
+**2. Connect a database** (skip this to run only the sample demo)
 
-### Saving real weddings
+Copy the example settings file:
 
-Without a database the app still runs as the sample demo. To save real weddings, run `backend/schema.sql` once on a Postgres database (we use Supabase), then put `DATABASE_URL` for the `weddingstay_api` role in `.env.local` (see `.env.example`) and run `npm run dev`: the app and its API both run at http://localhost:5173. With `DATABASE_URL` set, `npm test` also runs the API tests against it.
+```bash
+cp .env.example .env.local
+```
 
-There are no accounts yet. Creating a wedding gives the couple a private link (`#/w/<token>`) that opens it; each family's guest link (`#/g/<id>`) can only send that family's reply. The server is one Netlify Function (`backend/api.ts`) that keeps each wedding as one row and runs the same reducer as the app (`shared/reducer.ts`).
+Open `.env.local` and set `DATABASE_URL` to one of these:
+
+- **Supabase (the same database as the live site):** Supabase → weddingstay project → **Connect** → **Transaction pooler**. Copy that string, then change the user to `weddingstay_api.<project ref>` and the password to the `weddingstay_api` password.
+- **Postgres on your Mac:** `brew install postgresql@16 && brew services start postgresql@16`, then run once:
+  ```bash
+  psql postgres -c "create role weddingstay_api login password 'dev'" \
+               -c "create role anon" -c "create role authenticated" \
+               -f backend/schema.sql
+  ```
+  and use `DATABASE_URL=postgres://weddingstay_api:dev@localhost:5432/postgres`.
+
+`.env.local` is never committed. On a new database, run `backend/schema.sql` once first (the Supabase one is set up for you).
+
+**3. Start frontend and backend together**
+
+```bash
+npm run dev
+```
+
+Open http://localhost:5173. That one command serves the app and the API (`/api/...`), so there is nothing else to start. Tap **Add your wedding** to create a real one; without `DATABASE_URL` you get an error there, and the sample at `#/demo` still works.
+
+**Other commands**
+
+```bash
+npm test               # logic tests; also the API tests when DATABASE_URL is set
+npm run typecheck      # TypeScript check
+npm run build          # production site in dist/ (the API is deployed as a Netlify Function)
+npm run build:preview  # one self-contained HTML file of the demo in dist-preview/
+```
+
+### How the backend works
+
+- `backend/api.ts` is the whole API. On Netlify it runs as a function (`backend/functions/api.mts`); in `npm run dev` Vite runs the same file.
+  - `POST /api/weddings`: create a wedding, returns its private token
+  - `GET /api/w/<token>` / `POST /api/w/<token>`: the couple reads or changes their wedding
+  - `GET /api/g/<family id>` / `POST /api/g/<family id>`: one family reads its invite or sends its reply
+- Each wedding is one row in the `weddings` table (`backend/schema.sql`). Every change runs `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
 
 ## Deploy on Netlify
 
