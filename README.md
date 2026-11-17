@@ -201,15 +201,54 @@ One-time setup:
 
 `netlify.toml` holds the cache and security headers. Routes use `#/…` URLs, so no redirect rules are needed. Don't also link the repo in Netlify's own Git settings, or every push deploys twice.
 
-## What's in the prototype
+## Features
 
-| Area | Screens |
-| --- | --- |
-| Couple dashboard | Overview (headcount, rooms needed vs held per night, conflicts, setup checklist), Guests (filters, family drawer, import flow), Invitations (WhatsApp share, reminders), Functions, Settings (team and access) |
-| Accommodation | Hotels and night-wise inventory, Guest requirements, Room allocation with live validation, Rooming lists and publishing to guests |
-| Guest link (no login) | `/g/<household>` RSVP form per person and per function, travel, stay; confirmation; `/g/<household>/stay` stay details |
+### For the couple (private link `#/w/<token>`)
 
-Sample wedding: Ananya & Rohan, Udaipur, 11 to 13 Dec 2026, 32 families, 3 hotels. All names and bookings are invented (`shared/sample.ts`).
+**Start a wedding** (`/start`)
+- Three short steps: names, city, venue and dates, then which functions (Mehendi, Haldi, Sangeet, Wedding and so on).
+- No sign-up. Saving gives the couple a **private link**. Anyone with it can manage the wedding, like a Google Doc shared by link, so the app nudges them to copy it or WhatsApp it to themselves.
+- The link is remembered on that browser. On another phone, open the link again. `/login` explains this.
+
+**Guests** (`/app/guests`)
+- Add a family: name, whose side, main contact, WhatsApp number, number of adults and kids. Names can stay blank because the family fills them in when they reply.
+- **Send invite** opens WhatsApp with a ready message and the family's own link, and marks the invite as sent.
+- Send to many families one after another, and remind those who haven't replied.
+- **See what they see** opens the family's guest page.
+- **Import from Google Form**: upload the form's CSV (or paste the Google Sheet link). The app matches columns, groups people into families, flags rows that need a quick look (such as a leaving date before arrival), then adds them all in one go.
+- **Change the invite design**: six designs (Marigold Classic, Ivory Minimal, Midnight Deco, Sage Garden, Rani Pop, Desert Arch).
+
+**Functions** (`/app/functions`)
+- Add a function with its day, time and venue, and switch each one on or off for guests. Guests say which ones they're coming to, and the home page shows headcount per function.
+
+**Rooms** (`/app/rooms`)
+- **Hotels**: add a hotel (phone, distance, check-in and check-out) with its room types, number of rooms and people per room.
+- **Need a room**: families who asked for a room, with their people and dates. **Give a room** picks a room type, shows how many are free for those nights, and who stays in it. It checks extra beds, room capacity and free rooms for every night.
+- **Give a room to any family**: for families who **phoned or told you in person** instead of replying. Pick the family, tick who's staying, set arriving and leaving dates, then pick the room. The family is marked as coming and needing a room, and the history records "Reply noted for … family" by you.
+- **Room given**: move each room through *Room given → Hotel confirmed → Family told*. **Send room details** sends the family their hotel on WhatsApp, and only then does their guest page show it.
+- **Send list** sends each hotel its guest list on WhatsApp.
+
+**Home** (`/app`)
+- Headcount, who's coming to what, rooms needed against rooms booked per night, families still to reply, and a short setup checklist.
+
+**Settings** (`/app/settings`)
+- Your private link, with copy and "Send it to myself on WhatsApp".
+- Wedding details (couple, city, dates, when replies close), the invite design, and start a new wedding.
+- *Preview only for now:* "Who's helping" (inviting parents or cousins) and "Edit wedding details" aren't saved yet.
+
+### For each family (guest link `#/g/<familyId>`)
+- No login. The link only works for that family, and it can only change that family's own reply.
+- Three steps: who's coming to which function, travel (arrival time, flight or train number) and whether they need a room with dates.
+- They can come back and edit the reply until the deadline.
+- After the couple taps "Family told", **See your stay and schedule** shows their hotel, dates, check-in times and the functions.
+
+### Demo (`#/demo`)
+- A sample wedding (Ananya & Rohan, Udaipur, 32 families, 3 hotels) to click around. Nothing is saved. All names are invented (`shared/sample.ts`).
+
+### How data is kept safe
+- One database row per wedding. The private link is about 120 bits of randomness, and family links are 12 random characters.
+- The server checks every change: the couple's link can't do demo-only actions, and a guest link can only rewrite people already in its own family. Only the couple can note a reply on a family's behalf.
+- Supabase's public keys can't read the table (row-level security). Only the app's own database user can.
 
 ## Layout
 
