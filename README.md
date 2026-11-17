@@ -139,8 +139,9 @@ Expect: "Your wedding is saved 🎉" with your private link. Copy the link somew
 | Sharma family (Jaipur) | Bride's | Ramesh Sharma | 94140 11223 | 3 | 0 |
 | Mehta family (Ahmedabad) | Groom's | Kiran Mehta | 98250 44556 | 2 | 2 |
 | Iyer family (Chennai) | Both | Lakshmi Iyer | 98400 77889 | 2 | 0 |
+| Khanna family (Pune) | Groom's | Vikram Khanna | 98220 33445 | 3 | 0 |
 
-Expect: 6 families, 17 people. **Reload the page**: they're still there (saved in Supabase).
+Expect: 7 families, 20 people. **Reload the page**: they're still there (saved in Supabase).
 
 **3. Send an invite** → on Gupta family tap **Send invite**. WhatsApp opens with a message containing their guest link (`…/#/g/h…`). The family moves to "Not replied".
 
@@ -174,6 +175,8 @@ Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and need
 | | | | Family room | 2 | 5 |
 
 **7. Give rooms** → Rooms → **Give a room**: Gupta → Hotel Lake Palace / Deluxe room; Verma and Mehta → Amber Heritage Inn / Family room. Then move it through **Room given → Hotel confirmed → Family told**.
+
+**7b. Family phoned instead of replying** → Rooms → **Give a room to any family** → pick **Khanna** (no reply yet) → tick who's staying, set 12 to 14 Feb → **Next: pick a room** → Hotel Lake Palace / Suite. History shows "Reply noted for Khanna family" by You.
 
 **8. Guest sees their stay** → reopen the Gupta guest link and tap "See your stay and schedule": the hotel, dates and functions appear only after "Family told".
 

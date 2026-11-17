@@ -27,7 +27,7 @@ export function validateCoupleAction(a: Action): Action {
 /** A guest may only rewrite the people already in their own family. */
 export function validateGuestReply(d: WeddingData, familyId: string, a: Action): Action {
   const mine = new Set(d.guests.filter((g) => g.householdId === familyId).map((g) => g.id))
-  const ok = a.type === 'guest/respond' && a.householdId === familyId && Array.isArray(a.guests) && a.guests.length <= 40
+  const ok = a.type === 'guest/respond' && !a.byCouple && a.householdId === familyId && Array.isArray(a.guests) && a.guests.length <= 40
     && a.guests.every((g: Guest) => g && mine.has(g.id) && g.householdId === familyId)
   if (!ok) throw new AppError(400, 'That reply couldn’t be saved.')
   return a

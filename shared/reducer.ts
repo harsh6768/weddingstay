@@ -16,7 +16,7 @@ export type Action =
   | { type: 'invitation/state'; householdId: string; state: InvitationState }
   | { type: 'function/publish'; id: string; published: boolean }
   | { type: 'wedding/template'; id: string }
-  | { type: 'guest/respond'; householdId: string; guests: Guest[] }
+  | { type: 'guest/respond'; householdId: string; guests: Guest[]; /** The couple noted it (e.g. the family phoned), not the guest link. */ byCouple?: boolean }
   | { type: 'reset' }
   | { type: 'wedding/create'; brideName: string; groomName: string; city: string; venueName: string; startDate: string; endDate: string; functions: string[] }
   | { type: 'household/add'; household: Household; guests: Guest[] }
@@ -54,7 +54,7 @@ export function reducer(s: WeddingData, a: Action): WeddingData {
         ...s,
         guests: [...s.guests.filter((g) => !ids.has(g.id)), ...a.guests],
         households: s.households.map((x) => (x.id === a.householdId ? { ...x, invitation: was === 'SUBMITTED' || was === 'UPDATED' ? 'UPDATED' : 'SUBMITTED', respondedAt: now().slice(0, 10) } : x)),
-        audit: [event(`${h.name} (guest link)`, was === 'SUBMITTED' ? 'Response updated' : 'Response submitted', `${a.guests.length} people, ${a.guests.filter((g) => g.rsvp === 'YES').length} attending`), ...s.audit],
+        audit: [event(a.byCouple ? 'You' : `${h.name} (guest link)`, a.byCouple ? `Reply noted for ${h.name}` : was === 'SUBMITTED' ? 'Response updated' : 'Response submitted', `${a.guests.length} people, ${a.guests.filter((g) => g.rsvp === 'YES').length} attending`), ...s.audit],
       }
     }
     case 'reset':

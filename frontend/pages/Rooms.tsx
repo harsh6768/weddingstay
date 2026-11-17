@@ -20,6 +20,7 @@ export default function Rooms() {
   const tab: Tab = param === 'hotels' ? 'hotels' : param === 'confirmed' || param === 'given' ? 'given' : 'need'
   const setTab = (t: Tab) => setSp(t === 'need' ? {} : { show: t }, { replace: true })
   const [give, setGive] = useState<string | null>(null)
+  const [byPhone, setByPhone] = useState(false)
   const [addHotel, setAddHotel] = useState(sp.get('add') === 'hotel')
 
   const fams = data.households.map((h) => ({ h, ...familyInfo(data, h) }))
@@ -76,6 +77,12 @@ export default function Rooms() {
             </ul>
           )
         )}
+        {tab === 'need' && data.hotels.length > 0 && data.households.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-dashed border-line p-4 text-center">
+            <button className="btn-ghost w-full !min-h-[48px] text-[15px] sm:w-auto" onClick={() => setByPhone(true)}><Plus size={17} /> Give a room to any family</button>
+            <p className="mt-1.5 text-[13.5px] text-muted">For families who told you on the phone instead of replying.</p>
+          </div>
+        )}
         {tab === 'need' && unsure.length > 0 && data.hotels.length > 0 && (
           <p className="mt-4 rounded-2xl bg-sunk/70 p-4 text-[14px]"><b>{unsure.length} families</b> said “not sure” about a room. <Link to="/app/guests?show=room" className="font-medium text-plum underline">Ask them</Link> before the hotel’s hold ends.</p>
         )}
@@ -85,8 +92,74 @@ export default function Rooms() {
       </div>
 
       {give && <GiveRoom householdId={give} onClose={() => setGive(null)} />}
+      {byPhone && <NoteStay onClose={() => setByPhone(false)} onSaved={(id) => { setByPhone(false); setGive(id) }} />}
       <AddHotel open={addHotel} onClose={() => { setAddHotel(false); if (sp.get('add')) setSp(tab === 'need' ? {} : { show: tab }, { replace: true }) }} />
     </>
+  )
+}
+
+/** The couple notes a stay for a family who called instead of replying, then gives them a room. */
+function NoteStay({ onClose, onSaved }: { onClose: () => void; onSaved: (householdId: string) => void }) {
+  const { data, dispatch } = useStore()
+  const [q, setQ] = useState('')
+  const [hid, setHid] = useState<string | null>(null)
+  const h = data.households.find((x) => x.id === hid)
+  const people = h ? familyInfo(data, h).people : []
+  const [picked, setPicked] = useState<string[]>([])
+  const [checkIn, setCheckIn] = useState(addDays(data.wedding.startDate, -1))
+  const [checkOut, setCheckOut] = useState(addDays(data.wedding.endDate, 1))
+  const choose = (id: string) => { setHid(id); setPicked(data.guests.filter((g) => g.householdId === id && g.rsvp !== 'NO').map((g) => g.id)) }
+  const fns = data.functions.filter((f) => f.isPublished)
+  const ok = picked.length > 0 && checkIn && checkOut && checkOut > checkIn
+  const fams = data.households.filter((x) => familyInfo(data, x).waitingForRoom.length === 0 && x.name.toLowerCase().includes(q.trim().toLowerCase()))
+
+  const save = async () => {
+    const guests: Guest[] = people.filter((p) => picked.includes(p.id)).map((p) => ({
+      ...p, rsvp: 'YES', attendance: Object.fromEntries(fns.map((f) => [f.id, p.attendance[f.id] && p.attendance[f.id] !== 'PENDING' ? p.attendance[f.id] : 'YES'])),
+      stay: { ...p.stay, needs: 'YES', checkIn, checkOut },
+    }))
+    if (await dispatch({ type: 'guest/respond', householdId: h!.id, guests, byCouple: true })) onSaved(h!.id)
+  }
+
+  return (
+    <Modal open onClose={onClose} title={h ? `Room for ${h.name}` : 'Which family?'}>
+      {!h ? (
+        <div className="grid gap-3">
+          {data.households.length > 6 && <input className="input !min-h-[48px]" placeholder="Search a family" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search a family" />}
+          <ul className="grid max-h-[50vh] gap-2 overflow-y-auto">
+            {fams.map((x) => (
+              <li key={x.id}><button className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-left hover:bg-sunk" onClick={() => choose(x.id)}>
+                <div className="font-semibold">{x.name}</div>
+                <div className="text-[13.5px] text-muted">{familyInfo(data, x).people.length} people · {familyInfo(data, x).allocs.length ? 'has a room' : 'no room yet'}</div>
+              </button></li>
+            ))}
+            {!fams.length && <li className="text-[14px] text-muted">No family found.</li>}
+          </ul>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          <div>
+            <div className="label !text-[14px]">Who is staying?</div>
+            <div className="grid gap-1.5">
+              {people.map((p) => (
+                <label key={p.id} className="flex min-h-[44px] items-center gap-3 rounded-xl border border-line px-3">
+                  <input type="checkbox" className="h-5 w-5 accent-[rgb(var(--plum))]" checked={picked.includes(p.id)} onChange={(e) => setPicked(e.target.checked ? [...picked, p.id] : picked.filter((x) => x !== p.id))} />
+                  <span>{p.firstName} {p.lastName}{p.type === 'CHILD' && <span className="ml-1.5 text-[12.5px] text-muted">child</span>}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label htmlFor="ns-in" className="label !text-[14px]">Arriving</label><input id="ns-in" type="date" className="input !min-h-[48px]" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} /></div>
+            <div><label htmlFor="ns-out" className="label !text-[14px]">Leaving</label><input id="ns-out" type="date" className="input !min-h-[48px]" min={checkIn} value={checkOut} onChange={(e) => setCheckOut(e.target.value)} /></div>
+          </div>
+          {checkIn && checkOut && checkOut <= checkIn && <p className="text-[14px] text-bad">Leaving must be after arriving.</p>}
+          <p className="text-[13.5px] text-muted">We’ll mark them as coming and needing a room, then you pick the room.</p>
+          <button className="btn-primary !min-h-[52px] text-[16px]" disabled={!ok} style={{ opacity: ok ? 1 : 0.5 }} onClick={save}>Next: pick a room <ArrowRight size={17} /></button>
+          <button className="text-[14px] font-medium text-plum underline" onClick={() => setHid(null)}>Choose a different family</button>
+        </div>
+      )}
+    </Modal>
   )
 }
 
