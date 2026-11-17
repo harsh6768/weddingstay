@@ -18,7 +18,7 @@ Requires Node 20+.
 
 ### Saving real weddings
 
-Without a database the app still runs as the sample demo. To save real weddings, run `db/schema.sql` once on a Postgres database (we use Supabase), then set `DATABASE_URL` for the `weddingstay_api` role, e.g. `DATABASE_URL=postgres://... npm run dev`. With `DATABASE_URL` set, `npm test` also runs the API tests against it.
+Without a database the app still runs as the sample demo. To save real weddings, run `db/schema.sql` once on a Postgres database (we use Supabase), then put `DATABASE_URL` for the `weddingstay_api` role in `.env.local` (see `.env.example`) and run `npm run dev`: the app and its API both run at http://localhost:5173. With `DATABASE_URL` set, `npm test` also runs the API tests against it.
 
 There are no accounts yet. Creating a wedding gives the couple a private link (`#/w/<token>`) that opens it; each family's guest link (`#/g/<id>`) can only send that family's reply. The server is one Netlify Function (`src/server/api.ts`) that keeps each wedding as one row and runs the same reducer as the app (`src/lib/reducer.ts`).
 

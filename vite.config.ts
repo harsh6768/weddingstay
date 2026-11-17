@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 
@@ -17,8 +17,12 @@ const devApi = (): Plugin => ({
 })
 
 // `--mode preview` builds one self-contained HTML file (used for shareable previews).
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  // Lets the dev API read DATABASE_URL from .env.local.
+  Object.assign(process.env, { ...loadEnv(mode, process.cwd(), ''), ...process.env })
+  return {
   base: './',
   plugins: [react(), devApi(), ...(mode === 'preview' ? [viteSingleFile()] : [])],
   build: { outDir: mode === 'preview' ? 'dist-preview' : 'dist' },
-}))
+  }
+})
