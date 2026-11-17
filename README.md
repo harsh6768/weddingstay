@@ -81,7 +81,8 @@ backend/
     weddingService.ts         create / read / change a wedding; what a helper may see
     teamService.ts            my weddings, save to account, invites, join, remove helper
     guestService.ts           what a family may see, sending its reply
-  validators/actions.ts     what each kind of link (and a helper) is allowed to send
+  validators/actions.ts     what each kind of link (and a helper) is allowed to send, sizes of families and hotels
+  validators/team.ts        invite name and side, the shape of codes and links
   repositories/             data access, the only place with SQL
     weddingRepository.ts      weddings table
     teamRepository.ts         members and invites tables
@@ -104,12 +105,15 @@ Endpoints (all under `/api`):
 | GET | `/weddings/<id>/team` | owner or helper | who's helping, and open invites |
 | POST | `/weddings/<id>/invites` | owner | make a one-time invite link for a helper |
 | DELETE | `/weddings/<id>/invites/<code>` | owner | cancel an invite |
-| DELETE | `/weddings/<id>/members/<user id>` | owner | remove a helper |
+| DELETE | `/weddings/<id>/members/<member id>` | owner | remove a helper (a personal link stops working) |
 | GET / POST | `/join/<code>` | anyone / signed in | read an invite / join as a helper |
+| POST | `/join/<code>/link` | anyone with the invite | join without signing in; returns a personal link |
+| GET / POST | `/h/<link>` | a helper's personal link | read / change the wedding (their side only) |
+| GET | `/h/<link>/team` | a helper's personal link | who's helping |
 | GET / POST | `/g/<family id>` | one family | read its invite / send its reply |
 | GET | `/docs`, `/openapi.json` | developers | Swagger UI and the spec |
 
-Signed-in calls send `Authorization: Bearer <Supabase access token>`; `auth.ts` checks it against Supabase's public keys (or `SUPABASE_JWT_SECRET` for older projects). Each wedding is one row in the `weddings` table (`backend/schema.sql`); `members` says who can open it with Google, and `invites` holds the helpers' one-time links. Every change is an action applied by `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
+Signed-in calls send `Authorization: Bearer <Supabase access token>`; `auth.ts` checks it against Supabase's public keys (or `SUPABASE_JWT_SECRET` for older projects). Each wedding is one row in the `weddings` table (`backend/schema.sql`); `members` says who else can open it (with Google, or a helper's personal link), and `invites` holds the helpers' one-time links. Every change is an action applied by `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
 
 ## Database (Supabase)
 
@@ -147,7 +151,7 @@ One time, in about 10 minutes:
 5. Run the new tables once: Supabase → **SQL editor** → paste `backend/schema.sql` → Run (safe to run again).
 6. Netlify → Environment variables: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same as `.env.local`), next to `DATABASE_URL`.
 
-Who signs in: the couple and their helpers. Guests never do; they keep their WhatsApp link. Signing in is optional: a wedding made without an account still opens with its private link, and **Settings → Save to my Google account** links it later.
+Who signs in: the couple and their helpers, if they want to. Guests never do; they keep their WhatsApp link. A helper who doesn't want to sign in taps **Continue without signing in** on their invite and gets a personal link instead. Signing in is optional for the couple too: a wedding made without an account still opens with its private link, and **Settings → Save to my Google account** links it later.
 
 ## Test every flow (sample data)
 
@@ -224,6 +228,9 @@ Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and need
 - Open that `#/join/…` link in another browser (or a private window) signed in with a different Google account → **Join and open the wedding**. She sees only bride's side families (and ones for both sides), can reply for them and give rooms, but can't touch groom's side families, functions or the invite design.
 - Back as the couple, reload Settings: she's listed with **Remove**. Remove her, and her My weddings no longer opens it.
 - The same invite link can't be used twice.
+- Invite "Vikram bhaiya" for **Groom's side**, open his link in a private window and tap **Continue without signing in**. He sees "You're in" with his personal link (`#/h/…`), then only groom's side families. Reload: it still opens. Add a family: only Groom's and Both are offered. Functions has no Add button for him.
+- As the couple, his row says "Uses a personal link". Remove him: his link stops working and he sees "Your helper link isn't working any more".
+- Checks: the invite name must be 1 to 60 letters; a family's WhatsApp number must be a 10-digit Indian mobile; family names up to 80 letters.
 
 **9. Other checks**
 - Open the private link in another browser: the same wedding opens.
@@ -285,7 +292,7 @@ One-time setup:
 - Your private link, with copy and "Send it to myself on WhatsApp".
 - Wedding details (couple, city, dates, when replies close), the invite design, and start a new wedding.
 - **Save to my Google account** (when opened with the private link): links the wedding to your Google account.
-- **Who's helping** (when signed in): the couple invites parents, siblings or cousins with a one-time WhatsApp link (`/join/<code>`, valid 14 days). They pick a side: bride's, groom's or everyone. The helper signs in with Google and sees only that side's families (plus those shared by both), can reply on families' behalf, add families and give rooms. Only the couple can change functions and the invite design, invite or remove helpers. The demo shows a sample list.
+- **Who's helping** (when signed in): the couple invites parents, siblings or cousins with a one-time WhatsApp link (`/join/<code>`, valid 14 days). They pick a side: bride's, groom's or everyone. The helper either signs in with Google (recommended: works on any phone) or taps **Continue without signing in** and gets a personal link (`#/h/<link>`) saved on that phone, with a nudge to WhatsApp it to themselves. Either way they see only that side's families (plus those shared by both), can reply on families' behalf, add families on their side and give rooms. Only the couple can change functions and the invite design, invite or remove helpers; those buttons are hidden for helpers. Removing a helper turns their personal link off. Up to 30 helpers and open invites per wedding. The demo shows a sample list.
 - *Preview only for now:* "Edit wedding details" isn't saved yet.
 
 ### For each family (guest link `#/g/<familyId>`)
@@ -298,6 +305,8 @@ One-time setup:
 - A sample wedding (Ananya & Rohan, Udaipur, 32 families, 3 hotels) to click around. Nothing is saved. All names are invented (`shared/sample.ts`).
 
 ### How data is kept safe
+- A helper's personal link is about 120 random bits, works only for that helper's side, and stops working when the couple removes them.
+- Every form is checked on screen and again on the server (names, phone numbers, family and hotel sizes, invite sides).
 - Google sign-in is checked on the server for every call (signed token from Supabase Auth). A wedding you're not part of answers "not found".
 - One database row per wedding. The private link is about 120 bits of randomness, and family links are 12 random characters.
 - The server checks every change: the couple's link can't do demo-only actions, and a guest link can only rewrite people already in its own family. Only the couple can note a reply on a family's behalf.
