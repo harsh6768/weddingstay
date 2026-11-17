@@ -3,7 +3,8 @@ import { BedDouble, CalendarHeart, Home, Settings, Users } from 'lucide-react'
 import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Loading } from '../pages/Open'
-import { savedToken, useStore } from '../store'
+import { savedToken, savedWedding, useStore } from '../store'
+import { useSession, userName } from '../lib/auth'
 import { fmtRange } from '../../shared/dates'
 import { SampleBanner } from './ui'
 import { Toran } from './Ornaments'
@@ -29,10 +30,16 @@ export function Mark({ className }: { className?: string }) {
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 
 export default function AppShell() {
-  const { data, mode, status, problem, openWedding, openDemo } = useStore()
+  const { data, mode, status, problem, openWedding, openMember, openDemo } = useStore()
+  const { session } = useSession()
+  const me = mode === 'member' && session ? userName(session) : data.wedding.brideName
   const days = Math.max(0, Math.ceil((Date.parse(data.wedding.startDate) - Date.now()) / 864e5))
   // Came here from a guest link: go back to this phone's own wedding, or the sample.
-  useEffect(() => { if (mode === 'guest' && status === 'ready') { const t = savedToken(); if (t) openWedding(t).catch(openDemo); else openDemo() } }, [mode, status, openWedding, openDemo])
+  useEffect(() => {
+    if (mode !== 'guest' || status !== 'ready') return
+    const w = savedWedding(), t = savedToken()
+    ;(w ? openMember(w) : t ? openWedding(t) : Promise.reject()).catch(openDemo)
+  }, [mode, status, openWedding, openMember, openDemo])
   if (mode === 'guest' || status === 'loading') return <Loading />
   return (
     <div className="min-h-full md:flex">
@@ -61,8 +68,8 @@ export default function AppShell() {
             ))}
           </nav>
           <div className="mt-auto m-3 flex items-center gap-2.5 rounded-2xl bg-sunk px-3 py-2.5">
-            <div className="h-8 w-8 rounded-full bg-plum text-onplum grid place-items-center text-[13px] font-semibold">{data.wedding.brideName[0]}</div>
-            <div className="min-w-0"><div className="text-[13px] font-medium">{data.wedding.brideName}</div><div className="text-[12px] text-muted">You</div></div>
+            <div className="h-8 w-8 rounded-full bg-plum text-onplum grid place-items-center text-[13px] font-semibold">{me[0]}</div>
+            <div className="min-w-0"><div className="truncate text-[13px] font-medium">{me}</div><div className="text-[12px] text-muted">You</div></div>
           </div>
         </div>
       </aside>

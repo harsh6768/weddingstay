@@ -17,3 +17,37 @@ create policy server_all on weddings to weddingstay_api using (true) with check 
 grant usage on schema public to weddingstay_api;
 grant select, insert, update on weddings to weddingstay_api;
 revoke all on weddings from anon, authenticated; -- Supabase's public API roles
+
+-- Who can manage a wedding after signing in with Google. user_id is Supabase Auth's user id (the token's `sub`).
+-- side: null = the whole wedding; BRIDE or GROOM = only that side's families (plus families shared by both).
+create table if not exists members (
+  wedding_id uuid not null references weddings(id) on delete cascade,
+  user_id uuid not null,
+  name text not null,
+  email text not null,
+  role text not null check (role in ('OWNER', 'HELPER')),
+  side text check (side in ('BRIDE', 'GROOM')),
+  created_at timestamptz not null default now(),
+  primary key (wedding_id, user_id)
+);
+create index if not exists members_user on members (user_id);
+
+-- One-time invite links (/join/<code>) the couple sends a helper on WhatsApp.
+create table if not exists invites (
+  code text primary key,
+  wedding_id uuid not null references weddings(id) on delete cascade,
+  name text not null,
+  side text check (side in ('BRIDE', 'GROOM')),
+  created_at timestamptz not null default now(),
+  used_at timestamptz
+);
+create index if not exists invites_wedding on invites (wedding_id);
+
+alter table members enable row level security;
+alter table invites enable row level security;
+drop policy if exists server_all on members;
+drop policy if exists server_all on invites;
+create policy server_all on members to weddingstay_api using (true) with check (true);
+create policy server_all on invites to weddingstay_api using (true) with check (true);
+grant select, insert, update, delete on members, invites to weddingstay_api;
+revoke all on members, invites from anon, authenticated;

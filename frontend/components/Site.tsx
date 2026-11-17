@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Mark } from './AppShell'
-import { savedToken } from '../store'
+import { savedToken, savedWedding } from '../store'
 
 // Shared chrome for the public pages: header, footer, parallax and scroll reveal.
 
@@ -79,7 +79,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Link to={savedToken() ? '/app' : '/login'} className="btn !px-3 sm:!px-4 text-ink hover:bg-sunk">My wedding</Link>
+          <Link to={savedToken() || savedWedding() ? '/app' : '/login'} className="btn !px-3 sm:!px-4 text-ink hover:bg-sunk">My wedding</Link>
           <Link to="/start" className="btn-primary"><span>Add<span className="hidden sm:inline"> your</span> wedding</span></Link>
         </div>
       </div>

@@ -96,17 +96,3 @@ export function SaveLink() {
     </div>
   )
 }
-
-/** /login: there are no passwords yet, so explain how to get back in. */
-export function OpenHelp() {
-  return (
-    <Centered>
-      <h1 className="mt-4 font-display text-[30px] leading-[1.1] font-semibold">Open your wedding</h1>
-      <p className="mt-3 text-[15.5px] text-muted">There’s no password. When you created your wedding, you got a private link. Open that link on this phone and your wedding will open. If you sent it to yourself on WhatsApp, search your chats for “WeddingStay”.</p>
-      <div className="mt-6 flex flex-col gap-2">
-        <Link to="/start" className="btn-primary !min-h-[50px]">Add a new wedding</Link>
-        <Link to="/" className="btn-ghost !min-h-[50px]">Go to home page</Link>
-      </div>
-    </Centered>
-  )
-}

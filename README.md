@@ -35,6 +35,15 @@ Open `.env.local` and set `DATABASE_URL` to one of these:
   ```
   and use `DATABASE_URL=postgres://weddingstay_api:dev@localhost:5432/postgres`.
 
+For **Google sign-in**, also put these in `.env.local` (they're public, and already in `.env.example`):
+
+```
+VITE_SUPABASE_URL=https://sztprfjtncfmftvsvpuc.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_6z7kwbXFvO3DqRGXizUkQA_Bwd5mRBb
+```
+
+Google must be switched on in Supabase first (see [Google sign-in setup](#google-sign-in-setup)). Without these two lines everything else works; the sign-in buttons just say it isn't set up.
+
 `.env.local` is never committed, and it wins over any `DATABASE_URL` already set in your shell. When `npm run dev` starts it prints `API database: …` so you can see which database it uses. A new database needs `backend/schema.sql` run on it once.
 
 **3. Start frontend and backend together**
@@ -64,15 +73,19 @@ backend/
   api.ts                    entry: finds the route, turns errors into responses
   routes.ts                 every endpoint: method + path -> controller
   controllers/              HTTP only: read the request, call a service, send JSON
-    weddingController.ts      couple's endpoints
+    weddingController.ts      couple's endpoints (private link or signed in)
+    teamController.ts         signed-in people: my weddings, helpers, invite links
     guestController.ts        a family's guest-link endpoints
     docsController.ts         Swagger UI + OpenAPI
   services/                 business rules, no HTTP and no SQL
-    weddingService.ts         create / read / change a wedding
+    weddingService.ts         create / read / change a wedding; what a helper may see
+    teamService.ts            my weddings, save to account, invites, join, remove helper
     guestService.ts           what a family may see, sending its reply
-  validators/actions.ts     what each kind of link is allowed to send
+  validators/actions.ts     what each kind of link (and a helper) is allowed to send
   repositories/             data access, the only place with SQL
-    weddingRepository.ts
+    weddingRepository.ts      weddings table
+    teamRepository.ts         members and invites tables
+  auth.ts                   checks the Google sign-in token (Supabase Auth) on each request
   db.ts                     database connection (DATABASE_URL)
   http.ts, errors.ts        response helpers, AppError (status + message)
   openapi.ts                the API description for /api/docs
@@ -85,10 +98,18 @@ Endpoints (all under `/api`):
 | --- | --- | --- | --- |
 | POST | `/weddings` | anyone | create a wedding, returns its private token |
 | GET / POST | `/w/<token>` | the couple | read / change their wedding |
+| POST | `/w/<token>/claim` | signed in + private link | save the wedding to my Google account (as owner) |
+| GET | `/me/weddings` | signed in | weddings in my account, with my role |
+| GET / POST | `/weddings/<id>` | owner or helper | read / change the wedding (helpers: their side only) |
+| GET | `/weddings/<id>/team` | owner or helper | who's helping, and open invites |
+| POST | `/weddings/<id>/invites` | owner | make a one-time invite link for a helper |
+| DELETE | `/weddings/<id>/invites/<code>` | owner | cancel an invite |
+| DELETE | `/weddings/<id>/members/<user id>` | owner | remove a helper |
+| GET / POST | `/join/<code>` | anyone / signed in | read an invite / join as a helper |
 | GET / POST | `/g/<family id>` | one family | read its invite / send its reply |
 | GET | `/docs`, `/openapi.json` | developers | Swagger UI and the spec |
 
-Each wedding is one row in the `weddings` table (`backend/schema.sql`). Every change is an action applied by `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
+Signed-in calls send `Authorization: Bearer <Supabase access token>`; `auth.ts` checks it against Supabase's public keys (or `SUPABASE_JWT_SECRET` for older projects). Each wedding is one row in the `weddings` table (`backend/schema.sql`); `members` says who can open it with Google, and `invites` holds the helpers' one-time links. Every change is an action applied by `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
 
 ## Database (Supabase)
 
@@ -98,8 +119,8 @@ The database already exists; you don't need to create anything.
 | --- | --- |
 | Supabase project | `weddingstay` (ref `sztprfjtncfmftvsvpuc`), org "Your Tool Kit", free plan |
 | Region | `ap-south-1` (Mumbai) |
-| Table | `weddings`, created from `backend/schema.sql` |
-| App's login | role `weddingstay_api` (can only read, add and update `weddings`) |
+| Tables | `weddings`, `members`, `invites`, all from `backend/schema.sql` |
+| App's login | role `weddingstay_api` (only this role can use the tables) |
 | Connection | Transaction pooler, port `6543` |
 
 `DATABASE_URL` looks like this (the password is shared privately, never commit it):
@@ -111,6 +132,22 @@ DATABASE_URL=postgresql://weddingstay_api.sztprfjtncfmftvsvpuc:<password>@aws-1-
 If it can't connect, copy the host from Supabase → weddingstay → **Connect** → **Transaction pooler** (it may be `aws-0-...` instead of `aws-1-...`). Supabase's public API keys can't read the table: row level security is on and only `weddingstay_api` has a policy.
 
 To look at saved data: Supabase → weddingstay → **Table editor** → `weddings`. Each row is one wedding; `data` holds everything (families, guests, hotels, rooms).
+
+## Google sign-in setup
+
+One time, in about 10 minutes:
+
+1. **Google Cloud Console** → create a project (e.g. "WeddingStay") → **APIs & Services → OAuth consent screen**: External, app name "WeddingStay", your email. Publish it when you go live.
+2. **Credentials → Create credentials → OAuth client ID** → type *Web application*.
+   - Authorized JavaScript origins: `http://localhost:5173` and `https://weddingstay6768.netlify.app`
+   - Authorized redirect URI: `https://sztprfjtncfmftvsvpuc.supabase.co/auth/v1/callback`
+   - Copy the **Client ID** and **Client secret**.
+3. **Supabase** → weddingstay → **Authentication → Sign In / Providers → Google**: turn it on and paste the Client ID and secret.
+4. **Supabase → Authentication → URL Configuration**: Site URL `https://weddingstay6768.netlify.app`; Redirect URLs add `http://localhost:5173/**` and `https://weddingstay6768.netlify.app/**`.
+5. Run the new tables once: Supabase → **SQL editor** → paste `backend/schema.sql` → Run (safe to run again).
+6. Netlify → Environment variables: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same as `.env.local`), next to `DATABASE_URL`.
+
+Who signs in: the couple and their helpers. Guests never do; they keep their WhatsApp link. Signing in is optional: a wedding made without an account still opens with its private link, and **Settings → Save to my Google account** links it later.
 
 ## Test every flow (sample data)
 
@@ -180,6 +217,14 @@ Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and need
 
 **8. Guest sees their stay** → reopen the Gupta guest link and tap "See your stay and schedule": the hotel, dates and functions appear only after "Family told".
 
+**8b. Google sign-in and helpers** (needs [Google sign-in setup](#google-sign-in-setup))
+- Open `#/register` → **Continue with Google** → you land on **My weddings**.
+- If you made your wedding with a private link: open it, go to Settings → **Save to my Google account**. It now shows in My weddings, on any phone.
+- Settings → Who's helping → **Add a family member**: "Sunita (Mummy)", **Bride's side** → **Make their invite link** → **Send invite on WhatsApp**. She shows as "Invite sent, not joined yet".
+- Open that `#/join/…` link in another browser (or a private window) signed in with a different Google account → **Join and open the wedding**. She sees only bride's side families (and ones for both sides), can reply for them and give rooms, but can't touch groom's side families, functions or the invite design.
+- Back as the couple, reload Settings: she's listed with **Remove**. Remove her, and her My weddings no longer opens it.
+- The same invite link can't be used twice.
+
 **9. Other checks**
 - Open the private link in another browser: the same wedding opens.
 - Settings shows your private link with "Send it to myself on WhatsApp".
@@ -207,8 +252,13 @@ One-time setup:
 
 **Start a wedding** (`/start`)
 - Three short steps: names, city, venue and dates, then which functions (Mehendi, Haldi, Sangeet, Wedding and so on).
-- No sign-up. Saving gives the couple a **private link**. Anyone with it can manage the wedding, like a Google Doc shared by link, so the app nudges them to copy it or WhatsApp it to themselves.
-- The link is remembered on that browser. On another phone, open the link again. `/login` explains this.
+- Sign-up is optional. Saving gives the couple a **private link**. Anyone with it can manage the wedding, like a Google Doc shared by link, so the app nudges them to copy it or WhatsApp it to themselves.
+- The link is remembered on that browser. On another phone, open the link again, or sign in with Google.
+- Signed in with Google before starting? The wedding goes straight into **My weddings**.
+
+**Sign in with Google** (`/login`, `/register`, `/me`)
+- One button, "Continue with Google". No passwords.
+- **My weddings** lists every wedding you own or help with. Sign out from there or from Settings.
 
 **Guests** (`/app/guests`)
 - Add a family: name, whose side, main contact, WhatsApp number, number of adults and kids. Names can stay blank because the family fills them in when they reply.
@@ -234,7 +284,8 @@ One-time setup:
 **Settings** (`/app/settings`)
 - Your private link, with copy and "Send it to myself on WhatsApp".
 - Wedding details (couple, city, dates, when replies close), the invite design, and start a new wedding.
-- To let parents or cousins help, the couple shares the same private link (there are no separate helper accounts yet). The demo shows a sample "Who's helping" list of what that could look like.
+- **Save to my Google account** (when opened with the private link): links the wedding to your Google account.
+- **Who's helping** (when signed in): the couple invites parents, siblings or cousins with a one-time WhatsApp link (`/join/<code>`, valid 14 days). They pick a side: bride's, groom's or everyone. The helper signs in with Google and sees only that side's families (plus those shared by both), can reply on families' behalf, add families and give rooms. Only the couple can change functions and the invite design, invite or remove helpers. The demo shows a sample list.
 - *Preview only for now:* "Edit wedding details" isn't saved yet.
 
 ### For each family (guest link `#/g/<familyId>`)
@@ -247,6 +298,7 @@ One-time setup:
 - A sample wedding (Ananya & Rohan, Udaipur, 32 families, 3 hotels) to click around. Nothing is saved. All names are invented (`shared/sample.ts`).
 
 ### How data is kept safe
+- Google sign-in is checked on the server for every call (signed token from Supabase Auth). A wedding you're not part of answers "not found".
 - One database row per wedding. The private link is about 120 bits of randomness, and family links are 12 random characters.
 - The server checks every change: the couple's link can't do demo-only actions, and a guest link can only rewrite people already in its own family. Only the couple can note a reply on a family's behalf.
 - Supabase's public keys can't read the table (row-level security). Only the app's own database user can.
