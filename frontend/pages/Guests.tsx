@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { ArrowRight, Check, ChevronRight, FileSpreadsheet, Palette, Phone, Plus, Search, Upload, Users } from 'lucide-react'
+import { ArrowRight, Check, ChevronRight, Palette, Phone, Plus, Search, Upload, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ChatBubble, Chips, Choices, Modal, Pill, Stepper, WhatsAppButton } from '../components/ui'
@@ -8,6 +8,7 @@ import { familyInfo, inviteText, reminderText, replyText, sideHint, sideName, wa
 import { shortRange } from '../lib/family'
 import { useStore } from '../store'
 import { newId } from '../../shared/reducer'
+import ImportSheet from './ImportSheet'
 
 // Guests and invitations in one place. The unit is a family: add a family, send them their link on
 // WhatsApp, see who's coming. No tables, no dropdown filters.
@@ -16,6 +17,18 @@ type Show = 'all' | 'not-sent' | 'waiting' | 'coming' | 'not-coming' | 'room'
 const replyTone: Record<ReplyState, 'neutral' | 'info' | 'good' | 'warn'> = { 'not-sent': 'neutral', waiting: 'warn', coming: 'good', 'not-coming': 'neutral' }
 
 export default function Guests() {
+  const [sp, setSp] = useSearchParams()
+  const [importing, setImporting] = useState(sp.get('import') === '1')
+  return (
+    <>
+      <GuestList onImport={() => setImporting(true)} />
+      {/* Outside the list so it stays open when the list goes from empty to full. */}
+      <ImportSheet open={importing} onClose={() => { setImporting(false); if (sp.get('import')) setSp({}, { replace: true }) }} />
+    </>
+  )
+}
+
+function GuestList({ onImport }: { onImport: () => void }) {
   const { data, dispatch } = useStore()
   const [sp, setSp] = useSearchParams()
   const show = (sp.get('show') as Show) || 'all'
@@ -23,7 +36,6 @@ export default function Guests() {
   const [q, setQ] = useState('')
   const [open, setOpen] = useState<string | null>(null)
   const [adding, setAdding] = useState(sp.get('add') === '1')
-  const [importing, setImporting] = useState(false)
   const [queue, setQueue] = useState<string[] | null>(null)
 
   const fams = useMemo(() => data.households.map((h) => ({ h, ...familyInfo(data, h) })), [data])
@@ -37,16 +49,14 @@ export default function Guests() {
   if (fams.length === 0) {
     return (
       <>
-        <Header onAdd={() => setAdding(true)} sub="Nobody added yet" />
+        <Header onAdd={() => setAdding(true)} onImport={onImport} sub="Nobody added yet" />
         <section className="card mx-auto max-w-[560px] px-6 py-10 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-plumsoft text-plum"><Users size={30} /></div>
           <h2 className="mt-4 font-display text-[26px] font-semibold leading-tight">Add the families you’re inviting</h2>
           <p className="mx-auto mt-2 max-w-[38ch] text-[15px] text-muted">Add one family at a time: a name, whose side, and a WhatsApp number. They’ll fill in the rest themselves.</p>
           <button className="btn-primary mt-6 w-full !min-h-[52px] text-[16px]" onClick={() => setAdding(true)}><Plus size={18} /> Add a family</button>
-          <button className="btn-ghost mt-2.5 w-full !min-h-[48px]" onClick={() => setImporting(true)}><Upload size={16} /> I have an Excel list</button>
         </section>
         <AddFamily open={adding} onClose={() => setAdding(false)} />
-        <ImportSheet open={importing} onClose={() => setImporting(false)} />
       </>
     )
   }
@@ -54,7 +64,7 @@ export default function Guests() {
   const bulk = show === 'not-sent' || show === 'waiting' ? list : []
   return (
     <>
-      <Header onAdd={() => setAdding(true)} sub={`${fams.length} families · ${data.guests.length} people`} />
+      <Header onAdd={() => setAdding(true)} onImport={onImport} sub={`${fams.length} families · ${data.guests.length} people`} />
 
       <div className="mb-3 flex gap-2">
         <label className="relative flex-1">
@@ -106,27 +116,28 @@ export default function Guests() {
       </ul>
       {list.length === 0 && <p className="mt-10 text-center text-[15px] text-muted">{show === 'waiting' || show === 'not-sent' ? 'Nobody here. Everyone has their invite and has replied. 🎉' : 'No families match.'}</p>}
 
-      <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[14px]">
-        <button className="inline-flex min-h-[44px] items-center gap-1.5 font-medium text-plum" onClick={() => setImporting(true)}><Upload size={16} /> Add from Excel</button>
-        <Link to="/app/invitations/design" className="inline-flex min-h-[44px] items-center gap-1.5 font-medium text-plum"><Palette size={16} /> Change invite design</Link>
-      </div>
 
       <FamilySheet id={open} onClose={() => setOpen(null)} />
       <AddFamily open={adding} onClose={() => { setAdding(false); if (sp.get('add')) setSp({}, { replace: true }) }} />
-      <ImportSheet open={importing} onClose={() => setImporting(false)} />
       <SendQueue ids={queue} mode={show === 'not-sent' ? 'invite' : 'remind'} onClose={() => setQueue(null)} />
     </>
   )
 }
 
-function Header({ onAdd, sub }: { onAdd: () => void; sub: string }) {
+function Header({ onAdd, onImport, sub }: { onAdd: () => void; onImport: () => void; sub: string }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="font-display text-[34px] md:text-[40px] leading-[1.05] font-semibold">Guests</h1>
-        <p className="mt-0.5 text-[15px] text-muted">{sub}</p>
+    <div className="mb-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[34px] md:text-[40px] leading-[1.05] font-semibold">Guests</h1>
+          <p className="mt-0.5 text-[15px] text-muted">{sub}</p>
+        </div>
+        <button className="btn-primary w-full !min-h-[52px] text-[16px] sm:w-auto" onClick={onAdd}><Plus size={18} /> Add a family</button>
       </div>
-      <button className="btn-primary w-full !min-h-[52px] text-[16px] sm:w-auto" onClick={onAdd}><Plus size={18} /> Add a family</button>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+        <button className="btn-ghost !min-h-[48px] !px-3 text-[14px]" onClick={onImport}><Upload size={16} className="shrink-0" /> Import from Google Form</button>
+        <Link to="/app/invitations/design" className="btn-ghost !min-h-[48px] !px-3 text-[14px]"><Palette size={16} className="shrink-0" /> Invite design</Link>
+      </div>
     </div>
   )
 }
@@ -279,35 +290,6 @@ function SendQueue({ ids, mode, onClose }: { ids: string[] | null; mode: 'invite
             </WhatsAppButton>
             <button className={clsx('!min-h-[48px]', tapped ? 'btn-primary' : 'btn-ghost')} onClick={() => { setI(i + 1); setTapped(false) }}>{tapped ? 'Sent, next family' : 'Skip this family'} <ArrowRight size={16} /></button>
           </div>
-        </>
-      )}
-    </Modal>
-  )
-}
-
-function ImportSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [step, setStep] = useState(1)
-  const close = () => { setStep(1); onClose() }
-  return (
-    <Modal open={open} onClose={close} title="Add guests from Excel">
-      {step === 1 ? (
-        <>
-          <p className="text-[14.5px] text-muted">Any list works. We just need a name and a mobile number in each row. Family and side are nice to have.</p>
-          <button className="mt-4 w-full rounded-2xl border-2 border-dashed border-line p-6 text-center hover:bg-sunk" onClick={() => setStep(2)}>
-            <FileSpreadsheet className="mx-auto text-plum" size={30} />
-            <div className="mt-2 text-[16px] font-semibold">Choose your file</div>
-            <div className="text-[13px] text-muted">Excel or Google Sheets download</div>
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="rounded-2xl bg-good/10 p-4 text-[15px]"><span className="font-semibold">guests-final-v3.xlsx</span><br />We found <b>112 people</b> in <b>31 families</b>.</div>
-          <div className="mt-3 rounded-2xl border border-warn/30 bg-warn/10 p-4 text-[14px]">
-            <div className="font-semibold">2 rows need a quick look</div>
-            <ul className="mt-1 list-disc pl-5 text-muted"><li>Karthik Raghavan appears twice. We’ll keep one.</li><li>Row 87: mobile number has 9 digits. We’ll add the person without a number.</li></ul>
-          </div>
-          <button className="btn-primary mt-4 w-full !min-h-[52px] text-[16px]" onClick={close}>Add 112 people</button>
-          <button className="mt-2 min-h-[44px] w-full text-[14px] text-muted underline" onClick={() => setStep(1)}>Choose a different file</button>
         </>
       )}
     </Modal>
