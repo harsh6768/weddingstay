@@ -136,8 +136,11 @@ Expect: "Your wedding is saved 🎉" with your private link. Copy the link somew
 | Gupta family (Delhi) | Bride's | Sunil Gupta | 98765 43210 | 2 | 0 |
 | Verma family (Lucknow) | Groom's | Neha Verma | 98111 22334 | 2 | 1 |
 | Kapoor family (Mumbai) | Both | Rahul Kapoor | 99887 66554 | 1 | 0 |
+| Sharma family (Jaipur) | Bride's | Ramesh Sharma | 94140 11223 | 3 | 0 |
+| Mehta family (Ahmedabad) | Groom's | Kiran Mehta | 98250 44556 | 2 | 2 |
+| Iyer family (Chennai) | Both | Lakshmi Iyer | 98400 77889 | 2 | 0 |
 
-Expect: 3 families, 7 people. **Reload the page**: they're still there (saved in Supabase).
+Expect: 6 families, 17 people. **Reload the page**: they're still there (saved in Supabase).
 
 **3. Send an invite** → on Gupta family tap **Send invite**. WhatsApp opens with a message containing their guest link (`…/#/g/h…`). The family moves to "Not replied".
 
@@ -146,7 +149,15 @@ Expect: 3 families, 7 people. **Reload the page**: they're still there (saved in
 - Do you need a room? **Yes please**, arriving 11 Feb 2027, leaving 15 Feb 2027 → Next
 - **Send our reply** → "Dhanyavaad"
 
-Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and needs a room. Repeat for Verma family but answer **No** for one adult, and for Kapoor family **No, thanks** to the room.
+Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and needs a room. Then try these replies:
+
+| Family | Reply |
+| --- | --- |
+| Verma | 2 coming, 1 not; room 12 to 14 Feb |
+| Mehta | all 4 coming; room 11 to 14 Feb |
+| Kapoor | coming; no room (staying with relatives) |
+| Sharma | coming; no room (local) |
+| Iyer | not coming |
 
 **5. Import Google Form replies** → Guests → **Import from Google Form**. Upload `test-data/sample-rsvps.csv`, pick **Bride's**:
 - Expect 4 coming (8 people), 1 not coming (Karan Singh)
@@ -159,8 +170,10 @@ Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and need
 | --- | --- | --- | --- | --- | --- |
 | Hotel Lake Palace | 94140 00000 | 10 min | Deluxe room | 5 | 3 |
 | | | | Suite (tap "Another room type") | 2 | 4 |
+| Amber Heritage Inn | 94141 55660 | 20 min | Standard room | 6 | 2 |
+| | | | Family room | 2 | 5 |
 
-**7. Give rooms** → Rooms → on Gupta family tap **Give a room**, pick Hotel Lake Palace / Deluxe room, save. Then move it through **Room given → Hotel confirmed → Family told**.
+**7. Give rooms** → Rooms → **Give a room**: Gupta → Hotel Lake Palace / Deluxe room; Verma and Mehta → Amber Heritage Inn / Family room. Then move it through **Room given → Hotel confirmed → Family told**.
 
 **8. Guest sees their stay** → reopen the Gupta guest link and tap "See your stay and schedule": the hotel, dates and functions appear only after "Family told".
 
