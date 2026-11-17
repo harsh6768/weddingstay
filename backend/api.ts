@@ -7,6 +7,7 @@ import postgres from 'postgres'
 import { sampleData } from '../shared/sample'
 import type { Guest, WeddingData } from '../shared/types'
 import { newId, reducer, type Action } from '../shared/reducer'
+import { docsPage, openapi } from './openapi'
 
 declare const process: { env: Record<string, string | undefined> }
 const sql = postgres(process.env.DATABASE_URL ?? '', { prepare: false, max: 1, idle_timeout: 20 })
@@ -61,6 +62,8 @@ const change = (id: string, a: Action) => sql.begin(async (tx) => {
 
 export default async function api(req: Request): Promise<Response> {
   const [, , kind, key] = new URL(req.url).pathname.split('/')
+  if (kind === 'openapi.json') return json(openapi)
+  if (kind === 'docs') return new Response(docsPage, { headers: { 'content-type': 'text/html; charset=utf-8' } })
   try {
     // Start a new wedding. shortcut: no rate limit on creating weddings; add one if spam shows up.
     if (kind === 'weddings' && req.method === 'POST') {

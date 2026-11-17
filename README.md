@@ -56,6 +56,7 @@ npm run build:preview  # one self-contained HTML file of the demo in dist-previe
 
 ### How the backend works
 
+- **API docs:** with `npm run dev` running, open http://localhost:5173/api/docs (Swagger UI) to see and try every endpoint.
 - `backend/api.ts` is the whole API. On Netlify it runs as a function (`backend/functions/api.mts`); in `npm run dev` Vite runs the same file.
   - `POST /api/weddings`: create a wedding, returns its private token
   - `GET /api/w/<token>` / `POST /api/w/<token>`: the couple reads or changes their wedding
