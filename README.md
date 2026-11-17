@@ -35,7 +35,7 @@ Open `.env.local` and set `DATABASE_URL` to one of these:
   ```
   and use `DATABASE_URL=postgres://weddingstay_api:dev@localhost:5432/postgres`.
 
-`.env.local` is never committed. A new database needs `backend/schema.sql` run on it once.
+`.env.local` is never committed, and it wins over any `DATABASE_URL` already set in your shell. When `npm run dev` starts it prints `API database: …` so you can see which database it uses. A new database needs `backend/schema.sql` run on it once.
 
 **3. Start frontend and backend together**
 

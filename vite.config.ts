@@ -1,4 +1,5 @@
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { existsSync, readFileSync } from 'node:fs'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 
@@ -18,8 +19,13 @@ const devApi = (): Plugin => ({
 
 // `--mode preview` builds one self-contained HTML file (used for shareable previews).
 export default defineConfig(({ mode }) => {
-  // Lets the dev API read DATABASE_URL from .env.local.
-  Object.assign(process.env, { ...loadEnv(mode, process.cwd(), ''), ...process.env })
+  // The dev API reads DATABASE_URL from .env.local, which wins over any DATABASE_URL already in your shell.
+  if (existsSync('.env.local')) for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/)
+    if (m) process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2')
+  }
+  const db = process.env.DATABASE_URL
+  console.log(db ? `  API database: ${db.replace(/\/\/[^@]*@/, '//***@')}` : '  API database: none. Add DATABASE_URL to .env.local to save weddings (see README).')
   return {
   base: './',
   plugins: [react(), devApi(), ...(mode === 'preview' ? [viteSingleFile()] : [])],
