@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import RsvpHero from '../components/RsvpHero'
 import { templateById, templateStyle } from '../lib/templates'
 import type { Guest, NeedsRoom, Rsvp, TravelMode } from '../data/types'
-import { fmtDow, fmtTime } from '../lib/dates'
+import { addDays, fmtDay, fmtDow, fmtRange, fmtTime } from '../lib/dates'
 import { useStore } from '../store'
 
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
@@ -33,7 +33,7 @@ export function GuestFrame({ children, compact }: { children: React.ReactNode; c
             : <button type="button" className="rounded-full bg-white px-3 py-1 font-semibold text-[rgb(22_17_20)]" onClick={() => { dispatch({ type: 'wedding/template', id: t.id }); nav('/app/invitations/design') }}>Use this</button>}
         </div>
       )}
-      <RsvpHero t={t} bride={data.wedding.brideName.split(' ')[0]} groom={data.wedding.groomName.split(' ')[0]} venue={data.wedding.venueName} city={data.wedding.city} compact={compact} />
+      <RsvpHero t={t} bride={data.wedding.brideName.split(' ')[0]} groom={data.wedding.groomName.split(' ')[0]} venue={data.wedding.venueName} city={data.wedding.city} dates={`${fmtRange(data.wedding.startDate, data.wedding.endDate)} ${data.wedding.endDate.slice(0, 4)}`} compact={compact} />
       <div className="relative mx-auto max-w-[520px] py-5 pb-16" style={gutter}>{children}</div>
     </div>
   )
@@ -57,7 +57,7 @@ const steps = ['Who’s coming', 'Your stay', 'Send']
 
 export default function GuestForm() {
   const { householdId = 'h02' } = useParams()
-  const { data, dispatch } = useStore()
+  const { data, dispatch, mode } = useStore()
   const { search } = useRsvpDesign()
   const nav = useNavigate()
   const household = data.households.find((h) => h.id === householdId)
@@ -68,6 +68,8 @@ export default function GuestForm() {
   const [showTravel, setShowTravel] = useState(false)
   const [message, setMessage] = useState('')
   const [renamed, setRenamed] = useState<string[]>([])
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState(false)
 
   if (!household) return <GuestFrame><p>This link is no longer active. Please ask the couple for a new one.</p></GuestFrame>
   const family = household.name.replace(/ \(.*\)/, '')
@@ -93,9 +95,12 @@ export default function GuestForm() {
 
   const go = (n: number) => { setStep(n); window.scrollTo(0, 0) }
   const next = () => go(step === 0 && !anyComing ? 2 : step + 1)
-  const submit = () => {
-    dispatch({ type: 'guest/respond', householdId, guests: people.map((p) => ({ ...p, attendance: Object.fromEntries(fns.map((f) => [f.id, p.rsvp === 'NO' ? 'NO' : p.attendance[f.id] ?? 'PENDING'])) })) })
-    nav(`/g/${householdId}/done${search}`)
+  const submit = async () => {
+    setSending(true); setSendError(false)
+    const ok = await dispatch({ type: 'guest/respond', householdId, guests: people.map((p) => ({ ...p, attendance: Object.fromEntries(fns.map((f) => [f.id, p.rsvp === 'NO' ? 'NO' : p.attendance[f.id] ?? 'PENDING'])) })) })
+    setSending(false)
+    if (ok) nav(`/g/${householdId}/done${search}`)
+    else setSendError(true)
   }
   const blocked = (step === 0 && unanswered) || (step === 1 && stayBlocked)
   const h1 = 'font-head text-[28px] leading-[1.1] font-semibold'
@@ -181,8 +186,8 @@ export default function GuestForm() {
           <div className="card p-4 flex flex-col gap-3">
             <div className="font-semibold">When are you in {data.wedding.city}?</div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label htmlFor="arrive" className="label">Arriving</label><input id="arrive" type="date" className="input" min="2026-12-08" max="2026-12-16" value={arrive} onChange={(e) => setDates(e.target.value, leave)} /></div>
-              <div><label htmlFor="leave" className="label">Leaving</label><input id="leave" type="date" className="input" min="2026-12-09" max="2026-12-17" value={leave} onChange={(e) => setDates(arrive, e.target.value)} /></div>
+              <div><label htmlFor="arrive" className="label">Arriving</label><input id="arrive" type="date" className="input" min={addDays(data.wedding.startDate, -5)} max={addDays(data.wedding.endDate, 3)} value={arrive} onChange={(e) => setDates(e.target.value, leave)} /></div>
+              <div><label htmlFor="leave" className="label">Leaving</label><input id="leave" type="date" className="input" min={addDays(data.wedding.startDate, -4)} max={addDays(data.wedding.endDate, 4)} value={leave} onChange={(e) => setDates(arrive, e.target.value)} /></div>
             </div>
             {datesBad && <p className="text-[13px] text-bad">The leaving date needs to be after you arrive.</p>}
             {stay.needs === 'YES' && (!arrive || !leave) && <p className="text-[13px] text-muted">Add both dates so we know which nights you need.</p>}
@@ -225,7 +230,7 @@ export default function GuestForm() {
             )}
           </div>
           <div><label htmlFor="msg" className="label">A note for {data.wedding.brideName.split(' ')[0]} &amp; {data.wedding.groomName.split(' ')[0]} (optional)</label><textarea id="msg" className="input min-h-[80px]" value={message} onChange={(e) => setMessage(e.target.value)} /></div>
-          <p className="text-center text-[12.5px] text-muted">Only the couple and family helping them plan will see this. You can change your reply from this same link until 25 Nov.</p>
+          <p className="text-center text-[12.5px] text-muted">Only the couple and family helping them plan will see this. You can change your reply from this same link until {fmtDay(data.wedding.responseDeadline)}.</p>
         </section>
       )}
 
@@ -234,11 +239,12 @@ export default function GuestForm() {
         {step < 2 ? (
           <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={next} disabled={blocked} style={{ opacity: blocked ? 0.5 : 1 }}>Next <ArrowRight size={16} /></button>
         ) : (
-          <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={submit}>Send our reply</button>
+          <button type="button" className="btn-primary flex-1 !min-h-[48px] text-[15px]" onClick={submit} disabled={sending} style={{ opacity: sending ? 0.6 : 1 }}>{sending ? 'Sending…' : 'Send our reply'}</button>
         )}
       </div>
+      {sendError && <p role="alert" className="mt-2 text-center text-[14px] font-medium text-bad">Your reply wasn’t sent. Please check your internet and tap Send again.</p>}
       {step === 0 && unanswered && <p className="mt-2 text-center text-[12.5px] text-muted">Pick an answer for each person to continue.</p>}
-      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/guests" className="underline">Back to the couple's dashboard</Link> (prototype only)</p>
+      {mode === 'demo' && <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/guests" className="underline">Back to the couple's dashboard</Link> (sample only)</p>}
     </GuestFrame>
   )
 }

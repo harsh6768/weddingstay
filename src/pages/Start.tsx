@@ -14,7 +14,7 @@ const popularCities = ['Udaipur', 'Jaipur', 'Goa', 'Delhi', 'Mumbai', 'Bengaluru
 const commonFunctions = ['Roka', 'Mehendi', 'Haldi', 'Sangeet', 'Wedding', 'Reception']
 
 export default function Start() {
-  const { dispatch } = useStore()
+  const { createWedding } = useStore()
   const nav = useNavigate()
   const [step, setStep] = useState(0)
   const [bride, setBride] = useState('')
@@ -25,12 +25,15 @@ export default function Start() {
   const [to, setTo] = useState('')
   const [fns, setFns] = useState<string[]>(['Mehendi', 'Haldi', 'Sangeet', 'Wedding'])
   const [custom, setCustom] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const ok = [bride.trim() && groom.trim(), city.trim() && from && to && to >= from, fns.length > 0][step]
   const go = (n: number) => { setStep(n); window.scrollTo(0, 0) }
   const finish = () => {
-    dispatch({ type: 'wedding/create', brideName: bride.trim(), groomName: groom.trim(), city: city.trim(), venueName: venue.trim(), startDate: from, endDate: to, functions: fns })
-    nav('/app')
+    setSaving(true); setError('')
+    createWedding({ type: 'wedding/create', brideName: bride.trim(), groomName: groom.trim(), city: city.trim(), venueName: venue.trim(), startDate: from, endDate: to, functions: fns })
+      .then(() => nav('/app/link?new=1'), (e) => { setError(e.message || 'Couldn’t save. Please check your internet and try again.'); setSaving(false) })
   }
   const toggle = (f: string) => setFns((xs) => (xs.includes(f) ? xs.filter((x) => x !== f) : [...xs, f]))
   const h1 = 'font-display text-[32px] leading-[1.08] font-semibold'
@@ -111,11 +114,12 @@ export default function Start() {
 
         <div className="sticky bottom-0 -mx-4 mt-8 flex gap-3 border-t border-line/60 bg-bg/90 px-4 pt-3 backdrop-blur-xl" style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom, 0px))' }}>
           {step > 0 && <button type="button" className="btn-ghost !min-h-[52px] !px-4" onClick={() => go(step - 1)} aria-label="Back"><ArrowLeft size={18} /></button>}
-          <button type="button" className="btn-primary flex-1 !min-h-[52px] text-[16px]" disabled={!ok} style={{ opacity: ok ? 1 : 0.5 }} onClick={() => (step < 2 ? go(step + 1) : finish())}>
-            {step < 2 ? <>Next <ArrowRight size={18} /></> : <>Create our wedding <Check size={18} /></>}
+          <button type="button" className="btn-primary flex-1 !min-h-[52px] text-[16px]" disabled={!ok || saving} style={{ opacity: ok && !saving ? 1 : 0.5 }} onClick={() => (step < 2 ? go(step + 1) : finish())}>
+            {step < 2 ? <>Next <ArrowRight size={18} /></> : saving ? 'Saving…' : <>Create our wedding <Check size={18} /></>}
           </button>
         </div>
-        {step === 0 && <Link to="/app" className="mt-3 block text-center text-[13.5px] text-muted underline">Just looking? See a sample wedding</Link>}
+        {error && <p role="alert" className="mt-3 text-center text-[14.5px] font-medium text-bad">{error}</p>}
+        {step === 0 && <Link to="/demo" className="mt-3 block text-center text-[13.5px] text-muted underline">Just looking? See a sample wedding</Link>}
       </div>
     </div>
   )

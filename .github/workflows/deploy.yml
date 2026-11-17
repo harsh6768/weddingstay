@@ -39,6 +39,13 @@ jobs:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
     steps:
+      # The API function is bundled from source at deploy time.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
       - uses: actions/download-artifact@v4
         with:
           name: dist
@@ -52,7 +59,7 @@ jobs:
       - name: Deploy to Netlify
         id: deploy
         run: |
-          npx --yes netlify-cli@17 deploy --prod --dir=dist --json --message "${GITHUB_SHA::7}" > deploy.json
+          npx --yes netlify-cli@17 deploy --prod --dir=dist --functions=netlify/functions --json --message "${GITHUB_SHA::7}" > deploy.json
           url=$(node -e "console.log(require('./deploy.json').url)")
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed to $url"

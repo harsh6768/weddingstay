@@ -7,6 +7,7 @@ import type { Guest, Household, Side } from '../data/types'
 import { familyInfo, inviteText, reminderText, replyText, sideHint, sideName, waUrl, type ReplyState } from '../lib/family'
 import { shortRange } from '../lib/family'
 import { useStore } from '../store'
+import { newId } from '../lib/reducer'
 
 // Guests and invitations in one place. The unit is a family: add a family, send them their link on
 // WhatsApp, see who's coming. No tables, no dropdown filters.
@@ -198,7 +199,7 @@ function AddFamily({ open, onClose }: { open: boolean; onClose: () => void }) {
   const close = () => { reset(); onClose() }
 
   const save = () => {
-    const id = `hn${Date.now().toString(36)}`
+    const id = newId('h')
     const [first, ...rest] = contact.trim().split(' ')
     const last = rest.join(' ') || name.trim().split(' ')[0]
     const mk = (i: number, child: boolean): Guest => ({

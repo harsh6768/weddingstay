@@ -6,6 +6,7 @@ import RsvpHero from '../components/RsvpHero'
 import { PageHeader, Pill } from '../components/ui'
 import { templates, templateStyle, type RsvpTemplate } from '../lib/templates'
 import { useStore } from '../store'
+import { fmtRange } from '../lib/dates'
 
 /** A live, scaled-down guest page in the given design. */
 function MiniRsvp({ t }: { t: RsvpTemplate }) {
@@ -13,7 +14,7 @@ function MiniRsvp({ t }: { t: RsvpTemplate }) {
   return (
     <div className="pointer-events-none relative h-[400px] overflow-hidden rounded-t-[19px] select-none" style={{ background: templateStyle(t).background, ...templateStyle(t) }} aria-hidden="true">
       <div className="invite absolute left-1/2 top-0 w-[390px] -translate-x-1/2 origin-top pb-10" style={{ ...templateStyle(t), background: "transparent", zoom: 0.82 }}>
-        <RsvpHero t={t} bride={data.wedding.brideName.split(' ')[0]} groom={data.wedding.groomName.split(' ')[0]} venue={data.wedding.venueName} city={data.wedding.city} />
+        <RsvpHero t={t} bride={data.wedding.brideName.split(' ')[0]} groom={data.wedding.groomName.split(' ')[0]} venue={data.wedding.venueName} city={data.wedding.city} dates={`${fmtRange(data.wedding.startDate, data.wedding.endDate)} ${data.wedding.endDate.slice(0, 4)}`} />
         <div className="px-4 pt-4 text-center">
           <div className="font-head text-[26px] font-semibold">Namaste Prakash ji</div>
           <div className="card mt-3 p-4 text-left">
@@ -65,7 +66,7 @@ export default function RsvpDesign() {
                   </div>
                 </div>
                 <div className="mt-auto flex gap-2">
-                  <Link to={`/g/h05?design=${t.id}`} className="btn-ghost flex-1"><Eye size={16} /> Preview</Link>
+                  <Link to={`/g/${data.households[0]?.id ?? 'h05'}?design=${t.id}`} className="btn-ghost flex-1"><Eye size={16} /> Preview</Link>
                   <button type="button" className={clsx('flex-1', on ? 'btn-ghost opacity-60' : 'btn-primary')} disabled={on} onClick={() => dispatch({ type: 'wedding/template', id: t.id })}>
                     {on ? 'Selected' : 'Use this design'}
                   </button>

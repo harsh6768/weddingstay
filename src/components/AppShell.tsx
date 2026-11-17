@@ -1,7 +1,9 @@
 import clsx from 'clsx'
 import { BedDouble, CalendarHeart, Home, Settings, Users } from 'lucide-react'
+import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { useStore } from '../store'
+import { Loading } from '../pages/Open'
+import { savedToken, useStore } from '../store'
 import { fmtRange } from '../lib/dates'
 import { SampleBanner } from './ui'
 import { Toran } from './Ornaments'
@@ -27,8 +29,11 @@ export function Mark({ className }: { className?: string }) {
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 
 export default function AppShell() {
-  const { data } = useStore()
-    const days = Math.max(0, Math.ceil((Date.parse(data.wedding.startDate) - Date.parse('2026-11-16')) / 864e5))
+  const { data, mode, status, problem, openWedding, openDemo } = useStore()
+  const days = Math.max(0, Math.ceil((Date.parse(data.wedding.startDate) - Date.now()) / 864e5))
+  // Came here from a guest link: go back to this phone's own wedding, or the sample.
+  useEffect(() => { if (mode === 'guest' && status === 'ready') { const t = savedToken(); if (t) openWedding(t).catch(openDemo); else openDemo() } }, [mode, status, openWedding, openDemo])
+  if (mode === 'guest' || status === 'loading') return <Loading />
   return (
     <div className="min-h-full md:flex">
       <aside className="hidden md:flex md:w-[248px] shrink-0 flex-col sticky top-0 h-screen p-3">
@@ -72,7 +77,8 @@ export default function AppShell() {
           </div>
         </header>
         <main className="mx-auto max-w-[1180px] py-6 md:py-8" style={gutter}>
-          <div className="mb-6"><SampleBanner /></div>
+          {mode === 'demo' && <div className="mb-6"><SampleBanner /></div>}
+          {problem && <div role="alert" className="mb-6 rounded-2xl border border-[rgb(var(--bad)/0.4)] bg-[rgb(var(--bad)/0.08)] px-4 py-3 text-[14.5px] font-medium">{problem}</div>}
           <Outlet />
         </main>
       </div>

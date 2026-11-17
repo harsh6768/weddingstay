@@ -60,8 +60,8 @@ function Hero() {
             Send each family one beautiful WhatsApp invite. They tell you who's coming to which function and who needs a room. You fit everyone into your hotel blocks, night by night, without the spreadsheet.
           </p>
           <div className="rise mt-8 flex flex-wrap gap-3" style={d(220)}>
-            <Link to="/register" className="btn-primary !px-6 !py-3 text-[15px]">Create your wedding, free <ArrowRight size={17} /></Link>
-            <Link to="/app" className="btn-ghost !px-6 !py-3 text-[15px]">Explore a sample wedding</Link>
+            <Link to="/start" className="btn-primary !px-6 !py-3 text-[15px]">Create your wedding, free <ArrowRight size={17} /></Link>
+            <Link to="/demo" className="btn-ghost !px-6 !py-3 text-[15px]">Explore a sample wedding</Link>
           </div>
           <ul className="rise mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13.5px] text-muted" style={d(300)}>
             {['Guests need no app or login', 'Both sides plan together', 'Ready in 10 minutes'].map((t) => (

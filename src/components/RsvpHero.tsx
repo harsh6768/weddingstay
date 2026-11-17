@@ -9,6 +9,8 @@ interface Props {
   groom: string
   venue: string
   city: string
+  /** e.g. '11 to 13 Dec 2026' */
+  dates?: string
   compact?: boolean
 }
 
@@ -17,7 +19,7 @@ const ART = { pandakoala: PandaKoala, lovebirds: LoveBirds, elephants: RoyalElep
 const gutter = { paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))', paddingRight: 'max(16px, env(safe-area-inset-right, 0px))' }
 
 /** Header of the guest pages, drawn in the chosen RSVP design. */
-export default function RsvpHero({ t, bride, groom, venue, city, compact }: Props) {
+export default function RsvpHero({ t, bride, groom, venue, city, dates = '11 to 13 Dec 2026', compact }: Props) {
   const namesFont = { fontFamily: 'var(--names-font)' }
   const Art = ILLUSTRATED.includes(t.ornament) ? ART[t.ornament as keyof typeof ART] : null
 
@@ -30,7 +32,7 @@ export default function RsvpHero({ t, bride, groom, venue, city, compact }: Prop
           <div className={clsx(t.namesClass, '!text-[30px] !leading-[1.15] !tracking-normal', t.names.includes('Vibes') && '!text-[40px]')} style={namesFont}>
             {bride} <span className="text-gold">&amp;</span> {groom}
           </div>
-          <div className="mt-0.5 text-[14px] text-muted">11 to 13 December 2026 · {city}</div>
+          <div className="mt-0.5 text-[14px] text-muted">{dates} · {city}</div>
         </header>
       </>
     )
@@ -47,7 +49,7 @@ export default function RsvpHero({ t, bride, groom, venue, city, compact }: Prop
   )
   const kicker = <div className={clsx('text-[15px] text-muted', t.head.includes('Bricolage') ? 'font-semibold text-plum' : 'font-serif italic')}>{t.kicker}</div>
   const invite = <div className={clsx('text-[16px] text-ink/80', t.head.includes('Bricolage') ? 'font-medium' : 'font-serif italic')}>{t.invite}</div>
-  const date = <div className={clsx('text-ink', t.dateClass)}>11 · 12 · 13 December 2026</div>
+  const date = <div className={clsx('text-ink', t.dateClass)}>{dates}</div>
   const place = <div className="mt-1 text-[15px] text-muted">{venue}, {city}</div>
 
   return (
@@ -120,7 +122,7 @@ export default function RsvpHero({ t, bride, groom, venue, city, compact }: Prop
               <div className="mt-4">{names}</div>
               {invite}
               <div className="mt-5 flex flex-wrap justify-center gap-2">
-                <span className="rounded-full bg-surface px-3.5 py-1.5 text-[13.5px] font-semibold shadow-sm border border-line">11–13 Dec 2026</span>
+                <span className="rounded-full bg-surface px-3.5 py-1.5 text-[13.5px] font-semibold shadow-sm border border-line">{dates}</span>
                 <span className="rounded-full bg-surface px-3.5 py-1.5 text-[13.5px] font-semibold shadow-sm border border-line">{venue}, {city}</span>
               </div>
             </div>

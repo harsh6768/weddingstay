@@ -1,6 +1,7 @@
 import { CheckCircle2, Clock, MapPin, Phone } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { fmtDow, fmtTime } from '../lib/dates'
+import { fmtDay, fmtDow, fmtTime } from '../lib/dates'
+import { coupleName } from '../lib/family'
 import { useStore } from '../store'
 import { GuestFrame, useRsvpDesign } from './GuestForm'
 import { GoldDivider } from '../components/Ornaments'
@@ -16,7 +17,7 @@ export function GuestDone() {
         <div className="text-[44px] leading-none text-plum" style={{ fontFamily: 'var(--names-font)' }}>Dhanyavaad</div>
         <GoldDivider className="mx-auto mt-2 h-6 w-[180px]" />
         <h1 className="mt-2 text-[30px] leading-tight">Thank you, we've got it</h1>
-        <p className="mt-1 text-muted">Ananya &amp; Rohan can now see your family's reply. Open this same link anytime before 25 Nov to make changes.</p>
+        <p className="mt-1 text-muted">{coupleName(data)} can now see your family's reply. Open this same link anytime before {fmtDay(data.wedding.responseDeadline)} to make changes.</p>
         <div className="mt-5 flex flex-col gap-2">
           <Link to={`/g/${householdId}/stay${search}`} className="btn-primary">See your stay and schedule</Link>
           <Link to={`/g/${householdId}${search}`} className="btn-ghost">Edit our reply</Link>
@@ -29,7 +30,7 @@ export function GuestDone() {
 
 export default function GuestStay() {
   const { householdId = 'h02' } = useParams()
-  const { data } = useStore()
+  const { data, mode } = useStore()
   const h = data.households.find((x) => x.id === householdId)
   const rooms = data.allocations.filter((a) => a.householdId === householdId && a.publishedToGuest)
   const pending = data.allocations.some((a) => a.householdId === householdId && !a.publishedToGuest)
@@ -83,7 +84,7 @@ export default function GuestStay() {
           </li>
         ))}
       </ol>
-      <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/rooms?show=given" className="underline">Back to rooms</Link> (prototype only)</p>
+      {mode === 'demo' && <p className="mt-6 text-center text-[12px] text-muted"><Link to="/app/rooms?show=given" className="underline">Back to rooms</Link> (sample only)</p>}
     </GuestFrame>
   )
 }

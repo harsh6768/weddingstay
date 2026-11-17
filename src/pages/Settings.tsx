@@ -5,14 +5,21 @@ import { Choices, Modal, WhatsAppButton } from '../components/ui'
 import type { Side } from '../data/types'
 import { shortRange, sideName } from '../lib/family'
 import { useStore } from '../store'
+import { PrivateLinkCard } from './Open'
 
 export default function Settings() {
-  const { data, dispatch } = useStore()
+  const { data, dispatch, mode } = useStore()
   const [inviting, setInviting] = useState(false)
   return (
     <div className="mx-auto max-w-[760px]">
       <h1 className="font-display text-[34px] md:text-[40px] leading-[1.05] font-semibold">Family &amp; settings</h1>
 
+      {mode === 'host' ? (
+        <section className="mt-5">
+          <p className="mb-3 text-[15px] text-muted">To let parents, siblings or a cousin help with guests and rooms, send them this link.</p>
+          <PrivateLinkCard />
+        </section>
+      ) : (
       <section className="card mt-5">
         <div className="px-5 pt-4">
           <h2 className="font-display text-[22px] font-semibold">Who’s helping</h2>
@@ -32,6 +39,7 @@ export default function Settings() {
         </ul>
         <div className="p-4"><button className="btn-primary w-full !min-h-[52px] text-[16px]" onClick={() => setInviting(true)}><UserPlus size={18} /> Add a family member</button></div>
       </section>
+      )}
 
       <section className="card mt-5 p-5">
         <div className="flex items-center justify-between"><h2 className="font-display text-[22px] font-semibold">Wedding details</h2><button className="btn-ghost !min-h-[44px]"><Pencil size={15} /> Edit</button></div>
@@ -44,14 +52,14 @@ export default function Settings() {
         <Link to="/app/invitations/design" className="mt-4 inline-flex min-h-[44px] items-center font-medium text-plum">Change the invite design</Link>
       </section>
 
-      <section className="mt-5 rounded-2xl bg-sunk/70 p-5 text-[14px]">
+      {mode === 'demo' && <section className="mt-5 rounded-2xl bg-sunk/70 p-5 text-[14px]">
         <div className="font-semibold">Preview tools</div>
-        <p className="text-muted">This is sample data in your browser. Try it from scratch, or go back to the sample wedding.</p>
+        <p className="text-muted">This is sample data in your browser. Start your own wedding to save it for real.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link to="/start" className="btn-ghost !min-h-[44px]">Start a new wedding</Link>
           <button className="btn-ghost !min-h-[44px]" onClick={() => dispatch({ type: 'reset' })}>Load sample wedding</button>
         </div>
-      </section>
+      </section>}
 
       {inviting && <InviteHelper onClose={() => setInviting(false)} />}
     </div>

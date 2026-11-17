@@ -16,6 +16,12 @@ npm run build:preview  # one self-contained HTML file in dist-preview/
 
 Requires Node 20+.
 
+### Saving real weddings
+
+Without a database the app still runs as the sample demo. To save real weddings, run `db/schema.sql` once on a Postgres database (we use Supabase), then set `DATABASE_URL` for the `weddingstay_api` role, e.g. `DATABASE_URL=postgres://... npm run dev`. With `DATABASE_URL` set, `npm test` also runs the API tests against it.
+
+There are no accounts yet. Creating a wedding gives the couple a private link (`#/w/<token>`) that opens it; each family's guest link (`#/g/<id>`) can only send that family's reply. The server is one Netlify Function (`src/server/api.ts`) that keeps each wedding as one row and runs the same reducer as the app (`src/lib/reducer.ts`).
+
 ## Deploy on Netlify
 
 Pushes to `main` deploy automatically through GitHub Actions (`.github/workflows/deploy.yml`): it installs, runs the tests, builds, and publishes `dist/` to Netlify. Pull requests get the tests and build only.
@@ -25,7 +31,8 @@ One-time setup:
 1. In Netlify, create an empty site (**Add new site → Deploy manually**, or `npx netlify-cli sites:create`), then copy its **Site ID** from Site configuration → General.
 2. Create a personal access token under Netlify **User settings → Applications → Personal access tokens**.
 3. In GitHub, **Settings → Secrets and variables → Actions**, add `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN`.
-4. Re-run the latest "Test and deploy" run, or push to `main`.
+4. In Netlify, **Site configuration → Environment variables**, add `DATABASE_URL` (the Supabase pooler connection string for `weddingstay_api`).
+5. Re-run the latest "Test and deploy" run, or push to `main`.
 
 `netlify.toml` holds the cache and security headers. Routes use `#/…` URLs, so no redirect rules are needed. Don't also link the repo in Netlify's own Git settings, or every push deploys twice.
 

@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Mark } from './AppShell'
+import { savedToken } from '../store'
 
 // Shared chrome for the public pages: header, footer, parallax and scroll reveal.
 
@@ -78,8 +79,8 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Link to="/login" className="btn !px-3 sm:!px-4 text-ink hover:bg-sunk">Log in</Link>
-          <Link to="/register" className="btn-primary"><span>Sign up<span className="hidden sm:inline"> free</span></span></Link>
+          <Link to={savedToken() ? '/app' : '/login'} className="btn !px-3 sm:!px-4 text-ink hover:bg-sunk">My wedding</Link>
+          <Link to="/start" className="btn-primary"><span>Add<span className="hidden sm:inline"> your</span> wedding</span></Link>
         </div>
       </div>
     </header>
@@ -102,22 +103,22 @@ export function SiteFooter() {
           <div className="min-w-0">
             <Link to="/" className="flex items-center gap-2"><Mark className="h-8 w-8" /><span className="font-display text-[22px] font-semibold">WeddingStay</span></Link>
             <p className="mt-3 max-w-[34ch] text-[14px] leading-relaxed text-muted">Guest lists, RSVPs and hotel rooms for Indian weddings, in one place. Made in India, for big fat Indian weddings.</p>
-            <Link to="/register" className="btn-primary mt-5">Create your wedding</Link>
+            <Link to="/start" className="btn-primary mt-5">Create your wedding</Link>
           </div>
           {col('Product', [
             <button className={a} onClick={() => go('features')}>Features</button>,
             <button className={a} onClick={() => go('designs')}>Invite designs</button>,
             <button className={a} onClick={() => go('how')}>How it works</button>,
-            <Link className={a} to="/app">Sample wedding</Link>,
+            <Link className={a} to="/demo">Sample wedding</Link>,
           ])}
           {col('For guests', [
             <Link className={a} to="/g/h02">See a guest invite</Link>,
             <Link className={a} to="/g/h02/stay">See a stay page</Link>,
             <button className={a} onClick={() => go('faq')}>Questions</button>,
           ])}
-          {col('Account & legal', [
-            <Link className={a} to="/login">Log in</Link>,
-            <Link className={a} to="/register">Sign up</Link>,
+          {col('Your wedding & legal', [
+            <Link className={a} to="/login">Open my wedding</Link>,
+            <Link className={a} to="/start">Add your wedding</Link>,
             <Link className={a} to="/terms">Terms and Conditions</Link>,
             <Link className={a} to="/privacy">Privacy Policy</Link>,
           ])}

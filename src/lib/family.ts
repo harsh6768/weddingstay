@@ -38,7 +38,9 @@ export const roomStageText: Record<RoomStage, string> = { given: 'Waiting for ho
 export const shortRange = (a: string, b: string) => `${fmtDay(a)} to ${fmtDay(b)}`
 
 // ---- WhatsApp ----
-export const linkFor = (householdId: string) => `weddingstay.in/r/${householdId}-k9Lp`
+/** A full link into this app, e.g. appLink('/g/abc'). The app uses hash routes, so it works on any host. */
+export const appLink = (path: string) => `${location.origin}${location.pathname}#${path}`
+export const linkFor = (householdId: string) => appLink(`/g/${householdId}`)
 const first = (n: string) => n.split(' ')[0]
 export const coupleName = (d: WeddingData) => `${first(d.wedding.brideName)} & ${first(d.wedding.groomName)}`
 
