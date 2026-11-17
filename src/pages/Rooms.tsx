@@ -52,6 +52,7 @@ export default function Rooms() {
               <h2 className="mt-3 font-display text-[24px] font-semibold">{asked.length ? 'Everyone has a room' : 'No room requests yet'}</h2>
               <p className="mx-auto mt-1 max-w-[36ch] text-[15px] text-muted">{asked.length ? 'When a family changes their plans or asks for a room, they’ll appear here.' : 'Families tell you if they need a room when they reply to the invite.'}</p>
               {!asked.length && <Link to="/app/guests?show=not-sent" className="btn-primary mt-5 !min-h-[48px]">Send invites</Link>}
+              {!asked.length && <Link to="/app/guests?import=1" className="mt-3 block text-[14px] font-medium text-plum underline">Have replies in a Google Form? Add them</Link>}
             </div>
           ) : (
             <ul className="grid gap-2.5 md:grid-cols-2">
