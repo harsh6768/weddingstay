@@ -90,6 +90,87 @@ Endpoints (all under `/api`):
 
 Each wedding is one row in the `weddings` table (`backend/schema.sql`). Every change is an action applied by `shared/reducer.ts` inside a locked transaction, the same rules the app uses on screen.
 
+## Database (Supabase)
+
+The database already exists; you don't need to create anything.
+
+| | |
+| --- | --- |
+| Supabase project | `weddingstay` (ref `sztprfjtncfmftvsvpuc`), org "Your Tool Kit", free plan |
+| Region | `ap-south-1` (Mumbai) |
+| Table | `weddings`, created from `backend/schema.sql` |
+| App's login | role `weddingstay_api` (can only read, add and update `weddings`) |
+| Connection | Transaction pooler, port `6543` |
+
+`DATABASE_URL` looks like this (the password is shared privately, never commit it):
+
+```
+DATABASE_URL=postgresql://weddingstay_api.sztprfjtncfmftvsvpuc:<password>@aws-1-ap-south-1.pooler.supabase.com:6543/postgres
+```
+
+If it can't connect, copy the host from Supabase → weddingstay → **Connect** → **Transaction pooler** (it may be `aws-0-...` instead of `aws-1-...`). Supabase's public API keys can't read the table: row level security is on and only `weddingstay_api` has a policy.
+
+To look at saved data: Supabase → weddingstay → **Table editor** → `weddings`. Each row is one wedding; `data` holds everything (families, guests, hotels, rooms).
+
+## Test every flow (sample data)
+
+Start the app with `npm run dev` and open http://localhost:5173. Use a phone-sized browser window (DevTools → device toolbar) since most users are on phones. All names and numbers below are made up.
+
+**1. Create the wedding** → tap **Add your wedding**
+
+| Field | Value |
+| --- | --- |
+| Bride | Priya Sharma |
+| Groom | Arjun Mehta |
+| City | Jaipur |
+| First function / Last function | 12 Feb 2027 / 14 Feb 2027 |
+| Venue | Rambagh Palace |
+| Functions | Mehendi, Haldi, Sangeet, Wedding |
+
+Expect: "Your wedding is saved 🎉" with your private link. Copy the link somewhere: it's the only way back in on another browser.
+
+**2. Add families** → Guests → **Add a family**
+
+| Family name | Side | Send to | WhatsApp | Adults | Kids |
+| --- | --- | --- | --- | --- | --- |
+| Gupta family (Delhi) | Bride's | Sunil Gupta | 98765 43210 | 2 | 0 |
+| Verma family (Lucknow) | Groom's | Neha Verma | 98111 22334 | 2 | 1 |
+| Kapoor family (Mumbai) | Both | Rahul Kapoor | 99887 66554 | 1 | 0 |
+
+Expect: 3 families, 7 people. **Reload the page**: they're still there (saved in Supabase).
+
+**3. Send an invite** → on Gupta family tap **Send invite**. WhatsApp opens with a message containing their guest link (`…/#/g/h…`). The family moves to "Not replied".
+
+**4. Reply as a guest** → open that guest link in a private/incognito window (a guest's phone):
+- "Yes, all 2 of us are coming" → Next
+- Do you need a room? **Yes please**, arriving 11 Feb 2027, leaving 15 Feb 2027 → Next
+- **Send our reply** → "Dhanyavaad"
+
+Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and needs a room. Repeat for Verma family but answer **No** for one adult, and for Kapoor family **No, thanks** to the room.
+
+**5. Import Google Form replies** → Guests → **Import from Google Form**. Upload `test-data/sample-rsvps.csv`, pick **Bride's**:
+- Expect 4 coming (8 people), 1 not coming (Karan Singh)
+- Meera Nair "needs a quick look" (leaving date before arrival): pick 14 Feb as the other date
+- **Add 5 families** → you see people staying each night
+
+**6. Add a hotel** → Rooms → **Add a hotel**
+
+| Hotel name | Phone | Distance | Room type | Rooms | People per room |
+| --- | --- | --- | --- | --- | --- |
+| Hotel Lake Palace | 94140 00000 | 10 min | Deluxe room | 5 | 3 |
+| | | | Suite (tap "Another room type") | 2 | 4 |
+
+**7. Give rooms** → Rooms → on Gupta family tap **Give a room**, pick Hotel Lake Palace / Deluxe room, save. Then move it through **Room given → Hotel confirmed → Family told**.
+
+**8. Guest sees their stay** → reopen the Gupta guest link and tap "See your stay and schedule": the hotel, dates and functions appear only after "Family told".
+
+**9. Other checks**
+- Open the private link in another browser: the same wedding opens.
+- Settings shows your private link with "Send it to myself on WhatsApp".
+- Guests → Change invite design → pick a design → the guest link uses it.
+- `#/demo` still shows the sample wedding (Ananya & Rohan) and saves nothing.
+- http://localhost:5173/api/docs lets you call the API directly (Swagger).
+
 ## Deploy on Netlify
 
 Pushes to `main` deploy automatically through GitHub Actions (`.github/workflows/deploy.yml`): it installs, runs the tests, builds, and publishes `dist/` to Netlify. Pull requests get the tests and build only.

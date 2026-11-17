@@ -1,0 +1,6 @@
+Timestamp,Email Address,Name,Can you attend?,Give a good enough reason for not attending? :/,Number of guests attending?,Arrival Date,Arrival Time,Departure Date,Departure Time
+1/10/2027 10:12:01,ravi.test@example.com,Ravi Malhotra,"Yes, I'll be there",,2,2/11/2027,6:30:00 PM,2/15/2027,10:00:00 AM
+1/10/2027 11:40:22,sneha.test@example.com,Sneha Iyer,"Yes, I'll be there",,1,2/12/2027,9:00:00 AM,2/14/2027,8:00:00 PM
+1/11/2027 09:05:47,amit.test@example.com,Amit and Pooja Jain,"Yes, I'll be there",,3,2/12/2027,1:15:00 PM,2/15/2027,11:30:00 AM
+1/11/2027 20:18:09,karan.test@example.com,Karan Singh,"No, I can't make it",Work trip that week,,,,,
+1/12/2027 08:44:30,meera.test@example.com,Meera Nair,"Yes, I'll be there",,2,2/13/2027,7:00:00 AM,2/12/2027,9:00:00 PM
