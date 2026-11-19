@@ -151,7 +151,7 @@ One time, in about 10 minutes:
 5. Run the new tables once: Supabase → **SQL editor** → paste `backend/schema.sql` → Run (safe to run again).
 6. Netlify → Environment variables: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same as `.env.local`), next to `DATABASE_URL`.
 
-Who signs in: the couple and their helpers, if they want to. Guests never do; they keep their WhatsApp link. A helper who doesn't want to sign in taps **Continue without signing in** on their invite and gets a personal link instead. Signing in is optional for the couple too: a wedding made without an account still opens with its private link, and **Settings → Save to my Google account** links it later.
+Who signs in: the couple and their helpers, if they want to. Guests never do; they keep their WhatsApp link. A helper who doesn't want to sign in taps **Continue without signing in** on their invite and gets a personal link instead. Signing in is optional for the couple too: a wedding made without an account still opens with its private link, and **Settings → Save with Google** links it later.
 
 ## Test every flow (sample data)
 
@@ -223,7 +223,8 @@ Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and need
 
 **8b. Google sign-in and helpers** (needs [Google sign-in setup](#google-sign-in-setup))
 - Open `#/register` → **Continue with Google** → you land on **My weddings**.
-- If you made your wedding with a private link: open it, go to Settings → **Save to my Google account**. It now shows in My weddings, on any phone.
+- Add a wedding while signed out: after **Create our wedding** you see **Save with Google**. Tap it: you come back signed in and the wedding is in My weddings. Or tap **Skip for now**: you get the wedding link, and the app shows a "Save your wedding with Google" banner until you do (Later hides it).
+- If you made your wedding with a private link: open it, go to Settings → **Save with Google**. It now shows in My weddings, on any phone.
 - Settings → Who's helping → **Add a family member**: "Sunita (Mummy)", **Bride's side** → **Make their invite link** → **Send invite on WhatsApp**. She shows as "Invite sent, not joined yet".
 - Open that `#/join/…` link in another browser (or a private window) signed in with a different Google account → **Join and open the wedding**. She sees only bride's side families (and ones for both sides), can reply for them and give rooms, but can't touch groom's side families, functions or the invite design.
 - Back as the couple, reload Settings: she's listed with **Remove**. Remove her, and her My weddings no longer opens it.
@@ -259,7 +260,7 @@ One-time setup:
 
 **Start a wedding** (`/start`)
 - Three short steps: names, city, venue and dates, then which functions (Mehendi, Haldi, Sangeet, Wedding and so on).
-- Sign-up is optional. Saving gives the couple a **private link**. Anyone with it can manage the wedding, like a Google Doc shared by link, so the app nudges them to copy it or WhatsApp it to themselves.
+- Right after saving, the app asks the couple to **Save with Google** (one big button) so they can open the wedding on any phone with nothing to remember. **Skip for now** shows their **wedding link** instead (the private link). Anyone with it can manage the wedding, like a Google Doc shared by link, so the app nudges them to copy it or WhatsApp it to themselves.
 - The link is remembered on that browser. On another phone, open the link again, or sign in with Google.
 - Signed in with Google before starting? The wedding goes straight into **My weddings**.
 
@@ -291,7 +292,7 @@ One-time setup:
 **Settings** (`/app/settings`)
 - Your private link, with copy and "Send it to myself on WhatsApp". On a laptop it also shows an **"Open on your phone" QR code**: scan it with the phone camera and the wedding opens there (no sign-in). Helpers' personal links get the same QR. On `npm run dev` the QR holds a `localhost` address, so test it on your phone only after deploying (or run `npm run dev -- --host` and open the laptop's network address).
 - Wedding details (couple, city, dates, when replies close), the invite design, and start a new wedding.
-- **Save to my Google account** (when opened with the private link): links the wedding to your Google account.
+- **Save with Google** (when opened with the wedding link): links the wedding to your Google account. Until they do, a small banner in the app reminds them ("Save your wedding with Google so you never lose it", with Later to hide it).
 - **Who's helping** (when signed in): the couple invites parents, siblings or cousins with a one-time WhatsApp link (`/join/<code>`, valid 14 days). They pick a side: bride's, groom's or everyone. The helper either signs in with Google (recommended: works on any phone) or taps **Continue without signing in** and gets a personal link (`#/h/<link>`) saved on that phone, with a nudge to WhatsApp it to themselves. Either way they see only that side's families (plus those shared by both), can reply on families' behalf, add families on their side and give rooms. Only the couple can change functions and the invite design, invite or remove helpers; those buttons are hidden for helpers. Removing a helper turns their personal link off. Up to 30 helpers and open invites per wedding. The demo shows a sample list.
 - *Preview only for now:* "Edit wedding details" isn't saved yet.
 
@@ -342,4 +343,6 @@ shared/                 used by both sides
 
 ## Next
 
-Accounts and login, so a couple can get back in without their private link.
+- **WhatsApp OTP and phone-number login** (planned): sign in with a 6-digit code instead of Google, the easiest login for Indian families. Needs a WhatsApp Business (Meta) account for WhatsApp codes, or DLT registration plus an SMS provider such as MSG91 for SMS codes. Supabase supports phone login, so the backend change is small.
+- Installable app (PWA: "Add to Home Screen"), then Play Store / App Store via Capacitor if couples ask for it.
+- Edit wedding details in Settings.

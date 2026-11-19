@@ -1,13 +1,12 @@
 import { Pencil, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Choices, Modal, WhatsAppButton } from '../components/ui'
 import type { Side } from '../../shared/types'
 import { authReady, signOut, useSession, userName } from '../lib/auth'
 import { appLink, shortRange, sideName } from '../lib/family'
 import { api, useStore } from '../store'
-import { GoogleButton } from './Account'
-import { PrivateLinkCard } from './Open'
+import { PrivateLinkCard, SaveWithGoogle } from './Open'
 
 export default function Settings() {
   const { data, dispatch, mode, access } = useStore()
@@ -20,7 +19,7 @@ export default function Settings() {
       {mode === 'member' || mode === 'helper' ? <Team /> : mode === 'host' ? (
         <section className="mt-5">
           {authReady && <SaveToAccount />}
-          <p className="mb-3 mt-5 text-[15px] text-muted">To let parents, siblings or a cousin help with guests and rooms, send them this link{authReady ? ', or save the wedding to your Google account and invite them one by one' : ''}.</p>
+          <p className="mb-3 mt-5 text-[15px] text-muted">{authReady ? 'Not using Google? This link is the only way back into your wedding, so keep it safe.' : 'To let parents, siblings or a cousin help with guests and rooms, send them this link.'}</p>
           <PrivateLinkCard />
         </section>
       ) : (
@@ -72,23 +71,13 @@ export default function Settings() {
   )
 }
 
-/** Private-link mode: link this wedding to a Google account so it opens on any phone, and helpers can be invited. */
+/** Wedding-link mode: save it to a Google account so it opens on any phone, and helpers can be invited. */
 function SaveToAccount() {
-  const { token, openMember } = useStore()
-  const { session } = useSession()
-  const [sp] = useSearchParams()
-  const [error, setError] = useState('')
-  const save = useCallback(() => api(`/w/${token}/claim`, {}).then(({ id }) => openMember(id)).catch((e) => setError(e.message)), [token, openMember])
-  // Back from Google with ?claim=1: finish saving.
-  useEffect(() => { if (session && sp.get('claim')) save() }, [session, sp, save])
   return (
     <div className="card p-5">
-      <h2 className="font-display text-[22px] font-semibold">Save to my Google account</h2>
-      <p className="mt-1 text-[14.5px] text-muted">Open your wedding on any phone by signing in, and invite parents or cousins to help. Your private link keeps working.</p>
-      <div className="mt-4">
-        {session ? <button className="btn-primary w-full !min-h-[52px]" onClick={save}>Save to {userName(session)}</button> : <GoogleButton next="/app/settings?claim=1">Sign in with Google to save</GoogleButton>}
-      </div>
-      {error && <p className="mt-2 text-[14px] text-bad" role="alert">{error}</p>}
+      <h2 className="font-display text-[22px] font-semibold">Save with Google</h2>
+      <p className="mt-1 mb-4 text-[14.5px] text-muted">Open your wedding on any phone just by logging in, and invite parents or cousins to help. Your wedding link keeps working.</p>
+      <SaveWithGoogle next="/app/settings?claim=1" />
     </div>
   )
 }

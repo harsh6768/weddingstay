@@ -1,10 +1,13 @@
 // Pages that open a saved wedding: the couple's private link, guest links, and the private-link screen.
 import { Check, Copy, Lock, Smartphone } from 'lucide-react'
 import qrcode from 'qrcode-generator'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Mark } from '../components/AppShell'
 import { WhatsAppButton } from '../components/ui'
+import { authReady, useSession, userName } from '../lib/auth'
+import { api } from '../store'
+import { GoogleButton } from './Account'
 import { appLink } from '../lib/family'
 import { useStore } from '../store'
 
@@ -83,13 +86,13 @@ export function PrivateLinkCard() {
   const { copied, copy } = useCopy()
   if (!token && !helperLink) return null
   const link = appLink(helperLink ? `/h/${helperLink}` : `/w/${token}`)
-  const msg = `${helperLink ? 'My link for helping with' : 'Our wedding on WeddingStay'} (${data.wedding.name}). Private link, don’t share it:\n${link}`
+  const msg = `${helperLink ? 'My link for helping with' : 'Our wedding link on WeddingStay'} (${data.wedding.name}). Keep it private:\n${link}`
   return (
     <div className="card p-5 text-left">
-      <div className="flex items-center gap-2 font-semibold text-[16px]"><Lock size={17} className="text-plum" /> {helperLink ? 'Your personal link' : 'Your private link'}</div>
+      <div className="flex items-center gap-2 font-semibold text-[16px]"><Lock size={17} className="text-plum" /> {helperLink ? 'Your personal link' : 'Your wedding link'}</div>
       <p className="mt-1 text-[14.5px] text-muted">{helperLink
         ? 'This link is only for you. It opens the families you’re helping with, so please don’t forward it. If you lose it, ask the couple to send you a new invite.'
-        : 'This link opens your wedding. Anyone who has it can see and change your guest list, so only share it with family who are helping you plan.'}</p>
+        : 'This link opens your wedding. Anyone who has it can change everything, so keep it between the two of you. To get family to help, invite them from Settings instead.'}</p>
       <div className="mt-3 break-all rounded-xl bg-sunk px-3 py-2.5 text-[13.5px] font-medium select-all">{link}</div>
       <div className="mt-3 grid gap-2">
         <WhatsAppButton href={`https://wa.me/?text=${encodeURIComponent(msg)}`}>Send it to myself on WhatsApp</WhatsAppButton>
@@ -107,18 +110,50 @@ export function PrivateLinkCard() {
   )
 }
 
-/** /app/link: right after "Create our wedding". */
+/** Links a wedding opened with its wedding link to a Google account. Finishes by itself when coming back from Google with ?claim=1. */
+export function SaveWithGoogle({ next, onSaved }: { next: string; onSaved?: () => void }) {
+  const { token, openMember } = useStore()
+  const { session } = useSession()
+  const [sp] = useSearchParams()
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const save = useCallback(() => {
+    setBusy(true)
+    api(`/w/${token}/claim`, {}).then(({ id }) => openMember(id)).then(() => onSaved?.(), (e) => { setError(e.message); setBusy(false) })
+  }, [token, openMember, onSaved])
+  useEffect(() => { if (session && sp.get('claim')) save() }, [session, sp, save])
+  return (
+    <div>
+      {session ? <button className="btn-primary w-full !min-h-[52px] text-[16px]" disabled={busy} onClick={save}>{busy ? 'Saving…' : `Save to ${userName(session)}`}</button>
+        : <GoogleButton next={next}>Save with Google</GoogleButton>}
+      {error && <p className="mt-2 text-[14px] text-bad" role="alert">{error}</p>}
+    </div>
+  )
+}
+
+/** /app/link: right after "Create our wedding" (or a helper joining without signing in). */
 export function SaveLink() {
   const [sp] = useSearchParams()
   const { mode } = useStore()
+  const nav = useNavigate()
+  const [skipped, setSkipped] = useState(false)
   if (mode !== 'host' && mode !== 'helper') return <Navigate to="/app" replace />
   const helper = mode === 'helper'
+  // The couple: Google first, so there's nothing to remember. The wedding link only if they skip.
+  if (!helper && authReady && !skipped) return (
+    <div className="mx-auto max-w-[480px]">
+      <h1 className="font-display text-[32px] leading-[1.1] font-semibold">{sp.get('new') ? 'Your wedding is saved 🎉' : 'Keep your wedding safe'}</h1>
+      <p className="mt-2 text-[15.5px] text-muted">One last step: save it with your Google account. Then you can open it on any phone, any time, just by tapping “Log in”. Nothing to remember.</p>
+      <div className="card mt-5 p-5"><SaveWithGoogle next="/app/link?claim=1" onSaved={() => nav('/app', { replace: true })} /></div>
+      <button className="mt-4 min-h-[44px] w-full text-[14.5px] text-muted underline" onClick={() => setSkipped(true)}>Skip for now</button>
+    </div>
+  )
   return (
     <div className="mx-auto max-w-[480px]">
-      <h1 className="font-display text-[32px] leading-[1.1] font-semibold">{helper ? (sp.get('new') ? 'You’re in 🎉' : 'Your personal link') : sp.get('new') ? 'Your wedding is saved 🎉' : 'Your private link'}</h1>
-      <p className="mt-2 text-[15.5px] text-muted">There’s no password. You open {helper ? 'the wedding' : 'your wedding'} with this link, so please keep it somewhere safe. The easiest way is to send it to yourself on WhatsApp.</p>
+      <h1 className="font-display text-[32px] leading-[1.1] font-semibold">{helper ? (sp.get('new') ? 'You’re in 🎉' : 'Your personal link') : 'Your wedding link'}</h1>
+      <p className="mt-2 text-[15.5px] text-muted">{helper ? 'There’s no password. You open the wedding with this link' : 'Without Google, this link is the only way back into your wedding'}, so please keep it somewhere safe. The easiest way is to send it to yourself on WhatsApp.</p>
       <div className="mt-5"><PrivateLinkCard /></div>
-      <p className="mt-3 text-[13.5px] text-muted">On this device, WeddingStay will open the wedding by itself. You’ll need the link on a new phone or computer.</p>
+      <p className="mt-3 text-[13.5px] text-muted">On this device, WeddingStay will open the wedding by itself. You’ll need the link on a new phone or computer.{!helper && authReady && ' You can save it with Google later from Settings.'}</p>
       <Link to="/app" className="btn-primary mt-5 w-full !min-h-[52px] text-[16px]">{helper ? 'Done, open the wedding' : 'Done, take me to my wedding'}</Link>
     </div>
   )

@@ -59,7 +59,7 @@ export function SignIn({ register = false }: { register?: boolean }) {
       <h1 className="mt-4 font-display text-[30px] leading-[1.1] font-semibold">{register ? 'Create your account' : 'Welcome back'}</h1>
       <p className="mt-2 text-[15.5px] text-muted">{register ? 'Sign in with Google to keep your wedding safe and open it on any phone.' : 'Sign in to see your weddings.'}</p>
       <div className="mt-6"><GoogleButton next="/me" /></div>
-      <p className="mt-6 text-[14px] text-muted">Have a private link from WeddingStay? Just open it, no sign-in needed.</p>
+      <p className="mt-6 text-[14px] text-muted">Have a wedding link from WeddingStay? Just open it, no sign-in needed.</p>
       <div className="mt-4 flex flex-col gap-2">
         {register ? <Link to="/start" className="btn-ghost !min-h-[48px]">Skip, add a wedding without an account</Link> : <Link to="/register" className="btn-ghost !min-h-[48px]">New here? Create an account</Link>}
         <Link to="/" className="btn-ghost !min-h-[48px]">Go to home page</Link>
@@ -104,7 +104,7 @@ export function MyWeddings() {
               </button>
             </li>
           ))}
-          {list.length === 0 && <li className="rounded-2xl bg-sunk p-5 text-[15px] text-muted">No weddings yet. Add yours, or if you made one with a private link, open that link and tap “Save to my Google account” in Settings.</li>}
+          {list.length === 0 && <li className="rounded-2xl bg-sunk p-5 text-[15px] text-muted">No weddings yet. Add yours, or if you made one without Google, open its wedding link and tap “Save with Google” in Settings.</li>}
         </ul>
       )}
       <Link to="/start" className="btn-primary mt-5 w-full !min-h-[52px] text-[16px]"><Plus size={18} /> Add a wedding</Link>

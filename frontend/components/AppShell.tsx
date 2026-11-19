@@ -1,10 +1,10 @@
 import clsx from 'clsx'
 import { BedDouble, CalendarHeart, Home, Settings, Users } from 'lucide-react'
-import { useEffect } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Loading } from '../pages/Open'
 import { savedToken, savedWedding, useStore } from '../store'
-import { useSession, userName } from '../lib/auth'
+import { authReady, useSession, userName } from '../lib/auth'
 import { fmtRange } from '../../shared/dates'
 import { SampleBanner } from './ui'
 import { Toran } from './Ornaments'
@@ -33,6 +33,10 @@ export default function AppShell() {
   const { data, mode, status, problem, openWedding, openMember, openDemo } = useStore()
   const { session } = useSession()
   const me = mode === 'member' && session ? userName(session) : data.wedding.brideName
+  const { pathname } = useLocation()
+  const [later, setLater] = useState(false)
+  // A wedding opened only with its link: keep nudging until it's saved with Google (not on the screens that already ask).
+  const nudge = mode === 'host' && authReady && !later && !['/app/link', '/app/settings'].includes(pathname)
   const days = Math.max(0, Math.ceil((Date.parse(data.wedding.startDate) - Date.now()) / 864e5))
   // Came here from a guest link: go back to this phone's own wedding, or the sample.
   useEffect(() => {
@@ -85,6 +89,15 @@ export default function AppShell() {
         </header>
         <main className="mx-auto max-w-[1180px] py-6 md:py-8" style={gutter}>
           {mode === 'demo' && <div className="mb-6"><SampleBanner /></div>}
+          {nudge && (
+            <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-line bg-surface px-4 py-3 text-[14.5px]">
+              <span className="min-w-0 basis-full sm:basis-auto sm:flex-1">Save your wedding with Google so you never lose it.</span>
+              <span className="flex gap-2">
+                <Link to="/app/settings" className="btn-primary !min-h-[40px] !px-4 !text-[14px]">Save with Google</Link>
+                <button className="btn-ghost !min-h-[40px] !px-3 !text-[14px]" onClick={() => setLater(true)}>Later</button>
+              </span>
+            </div>
+          )}
           {problem && <div role="alert" className="mb-6 rounded-2xl border border-[rgb(var(--bad)/0.4)] bg-[rgb(var(--bad)/0.08)] px-4 py-3 text-[14.5px] font-medium">{problem}</div>}
           <Outlet />
         </main>
