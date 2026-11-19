@@ -1,5 +1,6 @@
 // Pages that open a saved wedding: the couple's private link, guest links, and the private-link screen.
-import { Check, Copy, Lock } from 'lucide-react'
+import { Check, Copy, Lock, Smartphone } from 'lucide-react'
+import qrcode from 'qrcode-generator'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Mark } from '../components/AppShell'
@@ -61,6 +62,21 @@ export function useCopy() {
   return { copied, copy }
 }
 
+/** A QR code for `text`, drawn as one SVG path. Always dark on white, so phone cameras read it in dark mode too. */
+export function QrCode({ text, size = 168 }: { text: string; size?: number }) {
+  const qr = qrcode(0, 'M')
+  qr.addData(text)
+  qr.make()
+  const n = qr.getModuleCount()
+  let d = ''
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`
+  return (
+    <svg viewBox={`-2 -2 ${n + 4} ${n + 4}`} width={size} height={size} role="img" aria-label="QR code that opens this link" className="shrink-0 rounded-xl bg-white">
+      <path d={d} fill="#000" />
+    </svg>
+  )
+}
+
 /** The couple's private link (or a helper's personal link), with ways to keep it safe. Shown right after creating or joining, and in Settings. */
 export function PrivateLinkCard() {
   const { token, helperLink, data } = useStore()
@@ -79,6 +95,14 @@ export function PrivateLinkCard() {
         <WhatsAppButton href={`https://wa.me/?text=${encodeURIComponent(msg)}`}>Send it to myself on WhatsApp</WhatsAppButton>
         <button type="button" className="btn-ghost !min-h-[50px]" onClick={() => copy(link)}>{copied ? <><Check size={16} /> Copied</> : <><Copy size={16} /> Copy link</>}</button>
       </div>
+      {/* On a laptop: scan with the phone camera to open the wedding there. Hidden on phones, where it's no use. */}
+      <div className="mt-4 hidden items-center gap-4 rounded-2xl bg-sunk p-4 md:flex">
+        <QrCode text={link} />
+        <div>
+          <div className="flex items-center gap-2 font-semibold text-[16px]"><Smartphone size={17} className="text-plum" /> Open on your phone</div>
+          <p className="mt-1 text-[14px] text-muted">Point your phone’s camera at this code and tap the link that pops up. {helperLink ? 'The wedding' : 'Your wedding'} opens on your phone, and the phone remembers it. No sign-in needed.</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -94,7 +118,7 @@ export function SaveLink() {
       <h1 className="font-display text-[32px] leading-[1.1] font-semibold">{helper ? (sp.get('new') ? 'You’re in 🎉' : 'Your personal link') : sp.get('new') ? 'Your wedding is saved 🎉' : 'Your private link'}</h1>
       <p className="mt-2 text-[15.5px] text-muted">There’s no password. You open {helper ? 'the wedding' : 'your wedding'} with this link, so please keep it somewhere safe. The easiest way is to send it to yourself on WhatsApp.</p>
       <div className="mt-5"><PrivateLinkCard /></div>
-      <p className="mt-3 text-[13.5px] text-muted">On this phone, WeddingStay will open the wedding by itself. You’ll need the link on a new phone or computer.</p>
+      <p className="mt-3 text-[13.5px] text-muted">On this device, WeddingStay will open the wedding by itself. You’ll need the link on a new phone or computer.</p>
       <Link to="/app" className="btn-primary mt-5 w-full !min-h-[52px] text-[16px]">{helper ? 'Done, open the wedding' : 'Done, take me to my wedding'}</Link>
     </div>
   )

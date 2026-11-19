@@ -289,7 +289,7 @@ One-time setup:
 - Headcount, who's coming to what, rooms needed against rooms booked per night, families still to reply, and a short setup checklist.
 
 **Settings** (`/app/settings`)
-- Your private link, with copy and "Send it to myself on WhatsApp".
+- Your private link, with copy and "Send it to myself on WhatsApp". On a laptop it also shows an **"Open on your phone" QR code**: scan it with the phone camera and the wedding opens there (no sign-in). Helpers' personal links get the same QR. On `npm run dev` the QR holds a `localhost` address, so test it on your phone only after deploying (or run `npm run dev -- --host` and open the laptop's network address).
 - Wedding details (couple, city, dates, when replies close), the invite design, and start a new wedding.
 - **Save to my Google account** (when opened with the private link): links the wedding to your Google account.
 - **Who's helping** (when signed in): the couple invites parents, siblings or cousins with a one-time WhatsApp link (`/join/<code>`, valid 14 days). They pick a side: bride's, groom's or everyone. The helper either signs in with Google (recommended: works on any phone) or taps **Continue without signing in** and gets a personal link (`#/h/<link>`) saved on that phone, with a nudge to WhatsApp it to themselves. Either way they see only that side's families (plus those shared by both), can reply on families' behalf, add families on their side and give rooms. Only the couple can change functions and the invite design, invite or remove helpers; those buttons are hidden for helpers. Removing a helper turns their personal link off. Up to 30 helpers and open invites per wedding. The demo shows a sample list.
