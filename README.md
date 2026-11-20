@@ -139,19 +139,60 @@ To look at saved data: Supabase → weddingstay → **Table editor** → `weddin
 
 ## Google sign-in setup
 
-One time, in about 10 minutes:
+Only the couple and their helpers sign in, and only if they want to. Guests never do; they keep their WhatsApp link. A helper who doesn't want to sign in taps **Continue without signing in** on their invite and gets a personal link instead. Signing in is optional for the couple too: a wedding made without an account still opens with its wedding link, and **Settings → Save with Google** links it later.
 
-1. **Google Cloud Console** → create a project (e.g. "WeddingStay") → **APIs & Services → OAuth consent screen**: External, app name "WeddingStay", your email. Publish it when you go live.
-2. **Credentials → Create credentials → OAuth client ID** → type *Web application*.
-   - Authorized JavaScript origins: `http://localhost:5173` and `https://weddingstay6768.netlify.app`
-   - Authorized redirect URI: `https://sztprfjtncfmftvsvpuc.supabase.co/auth/v1/callback`
-   - Copy the **Client ID** and **Client secret**.
-3. **Supabase** → weddingstay → **Authentication → Sign In / Providers → Google**: turn it on and paste the Client ID and secret.
-4. **Supabase → Authentication → URL Configuration**: Site URL `https://weddingstay6768.netlify.app`; Redirect URLs add `http://localhost:5173/**` and `https://weddingstay6768.netlify.app/**`.
-5. Run the new tables once: Supabase → **SQL editor** → paste `backend/schema.sql` → Run (safe to run again).
-6. Netlify → Environment variables: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same as `.env.local`), next to `DATABASE_URL`.
+### How it works
 
-Who signs in: the couple and their helpers, if they want to. Guests never do; they keep their WhatsApp link. A helper who doesn't want to sign in taps **Continue without signing in** on their invite and gets a personal link instead. Signing in is optional for the couple too: a wedding made without an account still opens with its private link, and **Settings → Save with Google** links it later.
+Supabase Auth sits between Google and the app. Google never talks to WeddingStay directly.
+
+1. The user taps **Continue with Google**. The app (`frontend/lib/auth.ts`) calls Supabase's `signInWithOAuth` with the PKCE flow, and remembers which page to come back to.
+2. Supabase sends the user to Google, using the Client ID and secret saved in Supabase.
+3. Google sends the user back to **Supabase**, at `https://sztprfjtncfmftvsvpuc.supabase.co/auth/v1/callback`.
+4. Supabase sends the user back to **the site's home page** with `?code=…` in the address. The app swaps that code for a session (`AuthReturn` in `frontend/pages/Account.tsx`), cleans the address and opens the page they started from. The code comes in the query string, not the `#`, so the app's `#/…` pages are untouched and no `/auth` page is needed.
+5. Each API call sends `Authorization: Bearer <access token>`. `backend/auth.ts` checks the token itself against Supabase's public keys (or `SUPABASE_JWT_SECRET`), so there's no extra "exchange the token" call and no separate session. The API lives on the same Netlify site, so no API URL setting is needed either.
+
+### One-time setup (about 10 minutes)
+
+**1. Google Cloud Console**
+- Create a project (e.g. "WeddingStay") → **APIs & Services → OAuth consent screen**: External, app name "WeddingStay", your email. Publish it when you go live, or only test users you add can sign in.
+- **Credentials → Create credentials → OAuth client ID** → type *Web application*, name "WeddingStay". Use its own client rather than one from another app, so people see "WeddingStay" on Google's screen.
+- Authorized JavaScript origins: `http://localhost:5173` (and `https://weddingstay6768.netlify.app` when going live).
+- Authorized redirect URI: `https://sztprfjtncfmftvsvpuc.supabase.co/auth/v1/callback`. This is Supabase's address, **not** the site's.
+- Copy the **Client ID** and **Client secret**. The secret goes only into Supabase: never in `.env`, the repo or chat.
+
+**2. Supabase → weddingstay → Authentication → Sign In / Providers → Google**
+- Turn it on and paste the Client ID and secret.
+
+**3. Supabase → Authentication → URL Configuration**
+
+| | Testing on your laptop | Live site |
+|---|---|---|
+| Site URL | `http://localhost:5173` | `https://weddingstay6768.netlify.app` |
+| Redirect URLs | `http://localhost:5173/**` | add `https://weddingstay6768.netlify.app/**` (keep the localhost one) |
+
+**4. Tables:** run `backend/schema.sql` once in Supabase → **SQL editor** (safe to run again). Already done on 2026-11-20.
+
+**5. Your laptop:** put `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` (see step 2 of [Run it on your computer](#run-it-on-your-computer)), then restart `npm run dev`. Vite reads them only when it starts.
+
+**6. Live site (Netlify → Site configuration → Environment variables):** add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `DATABASE_URL`, then **redeploy**. Vite bakes the `VITE_` values in at build time, so changing them does nothing until the next deploy.
+
+### Check it works
+
+1. Open the site → **Log in** → **Continue with Google**.
+2. Pick your Google account. You should come back to the same site (not localhost when testing the live one) and land on **My weddings**.
+3. In DevTools → Network, calls to `/api/me/weddings` should answer 200.
+
+### If something goes wrong
+
+| What you see | Why | Fix |
+|---|---|---|
+| Google says **redirect_uri_mismatch** | The Google client doesn't have Supabase's callback | Add `https://sztprfjtncfmftvsvpuc.supabase.co/auth/v1/callback` as the redirect URI |
+| Google says **Missing client_id** / "provider is not enabled" | Google isn't switched on in Supabase, or the ID is empty | Step 2 above |
+| The live site sends you back to **localhost** | Supabase Site URL is still localhost, or the live address isn't in Redirect URLs | Step 3, live column |
+| Sign-in buttons say sign-in **isn't set up** | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` missing | Add them, then restart `npm run dev` (laptop) or redeploy (Netlify) |
+| Back on the site but the app says **Please sign in again** | The API couldn't check the token (older Supabase projects sign with a shared secret) | Put Supabase → Settings → JWT Keys → *Legacy JWT secret* in `SUPABASE_JWT_SECRET` (server-only, never `VITE_`) |
+| Only some Google accounts can sign in | The consent screen is still in *Testing* | Publish it, or add those accounts as test users |
+| You come back but the API answers 503 | `DATABASE_URL` isn't set | Add it to `.env.local` or Netlify |
 
 ## Test every flow (sample data)
 
