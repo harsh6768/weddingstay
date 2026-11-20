@@ -154,6 +154,7 @@ Supabase Auth sits between Google and the app. Google never talks to WeddingStay
 ### One-time setup (about 10 minutes)
 
 **1. Google Cloud Console**
+- WeddingStay's OAuth client lives in Google Cloud project `placestest-301006`: [open its Credentials page](https://console.cloud.google.com/apis/credentials?project=placestest-301006). Edit the existing client there instead of making a new one.
 - Create a project (e.g. "WeddingStay") → **APIs & Services → OAuth consent screen**: External, app name "WeddingStay", your email. Publish it when you go live, or only test users you add can sign in.
 - **Credentials → Create credentials → OAuth client ID** → type *Web application*, name "WeddingStay". Use its own client rather than one from another app, so people see "WeddingStay" on Google's screen.
 - Authorized JavaScript origins: `http://localhost:5173` (and `https://weddingstay6768.netlify.app` when going live).
@@ -313,7 +314,7 @@ That split decides where each setting lives:
 
 **3. Supabase and Google, for the live address** (see [Google sign-in setup](#google-sign-in-setup))
 - Supabase → Authentication → **URL Configuration**: Site URL `https://weddingstay6768.netlify.app`, and add `https://weddingstay6768.netlify.app/**` to Redirect URLs (keep `http://localhost:5173/**` for testing).
-- Google Cloud → your OAuth client → add `https://weddingstay6768.netlify.app` to **Authorized JavaScript origins**.
+- [Google Cloud → Credentials](https://console.cloud.google.com/apis/credentials?project=placestest-301006) → the WeddingStay OAuth client → add `https://weddingstay6768.netlify.app` to **Authorized JavaScript origins**.
 - Google Cloud → **OAuth consent screen** → **Publish app**, so any Google account can sign in.
 
 **4. Deploy:** merge into `main`, or GitHub → **Actions → Test and deploy → Run workflow**. Netlify env changes also need a new deploy before the API sees them.
