@@ -110,6 +110,19 @@ export function PrivateLinkCard() {
   )
 }
 
+/** For signed-in people on a laptop: scan to open the sign-in page on the phone. Holds no secret, only the site's login address. */
+export function SignInQr() {
+  return (
+    <div className="mt-2 hidden w-full items-center gap-4 rounded-2xl bg-surface p-4 text-left md:flex">
+      <QrCode text={appLink('/login')} size={136} />
+      <div>
+        <div className="flex items-center gap-2 font-semibold text-[16px]"><Smartphone size={17} className="text-plum" /> Open on your phone</div>
+        <p className="mt-1 text-[14px] text-muted">Point your phone’s camera at this code and tap the link. Sign in with the same Google account and your weddings are there. It’s safe to show: it opens nothing without your Google sign-in.</p>
+      </div>
+    </div>
+  )
+}
+
 /** Links a wedding opened with its wedding link to a Google account. Finishes by itself when coming back from Google with ?claim=1. */
 export function SaveWithGoogle({ next, onSaved }: { next: string; onSaved?: () => void }) {
   const { token, openMember } = useStore()

@@ -6,7 +6,7 @@ import type { Side } from '../../shared/types'
 import { authReady, signOut, useSession, userName } from '../lib/auth'
 import { appLink, shortRange, sideName } from '../lib/family'
 import { api, useStore } from '../store'
-import { PrivateLinkCard, SaveWithGoogle } from './Open'
+import { PrivateLinkCard, SaveWithGoogle, SignInQr } from './Open'
 
 export default function Settings() {
   const { data, dispatch, mode, access } = useStore()
@@ -150,6 +150,7 @@ function SignedIn() {
         <Link to="/me" className="btn-ghost !min-h-[44px]">My weddings</Link>
         <button className="btn-ghost !min-h-[44px]" onClick={() => signOut().then(() => nav('/'))}>Sign out</button>
       </span>
+      <SignInQr />
     </section>
   )
 }

@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { shortRange } from '../lib/family'
 import { authReady, signInWithGoogle, signOut, supabase, takeNext, useSession, userName } from '../lib/auth'
 import { api, useStore } from '../store'
-import { Centered, Loading } from './Open'
+import { Centered, Loading, SignInQr } from './Open'
 
 const sideText = (side: string | null) => (side === 'BRIDE' ? 'the bride’s side' : side === 'GROOM' ? 'the groom’s side' : 'the whole wedding')
 
@@ -108,6 +108,7 @@ export function MyWeddings() {
         </ul>
       )}
       <Link to="/start" className="btn-primary mt-5 w-full !min-h-[52px] text-[16px]"><Plus size={18} /> Add a wedding</Link>
+      <div className="mt-5"><SignInQr /></div>
     </div>
   )
 }

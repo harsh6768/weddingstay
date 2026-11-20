@@ -351,6 +351,7 @@ That split decides where each setting lives:
 
 **Sign in with Google** (`/login`, `/register`, `/me`)
 - One button, "Continue with Google". No passwords.
+- **Open on your phone** (laptop only): My weddings and Settings show a QR code of the login page. Scan it, sign in with the same Google account, and the weddings are there. It holds no secret, so it's safe to show.
 - **My weddings** lists every wedding you own or help with. Sign out from there or from Settings.
 
 **Guests** (`/app/guests`)
