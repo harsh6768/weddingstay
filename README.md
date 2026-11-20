@@ -174,7 +174,7 @@ Supabase Auth sits between Google and the app. Google never talks to WeddingStay
 
 **5. Your laptop:** put `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` (see step 2 of [Run it on your computer](#run-it-on-your-computer)), then restart `npm run dev`. Vite reads them only when it starts.
 
-**6. Live site (Netlify → Site configuration → Environment variables):** add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `DATABASE_URL`, then **redeploy**. Vite bakes the `VITE_` values in at build time, so changing them does nothing until the next deploy.
+**6. Live site:** see [Deploy on Netlify](#deploy-on-netlify). The page's two `VITE_` values come from `.env.production` in the repo; Netlify needs `DATABASE_URL` and `VITE_SUPABASE_URL` for the API.
 
 ### Check it works
 
@@ -189,7 +189,7 @@ Supabase Auth sits between Google and the app. Google never talks to WeddingStay
 | Google says **redirect_uri_mismatch** | The Google client doesn't have Supabase's callback | Add `https://sztprfjtncfmftvsvpuc.supabase.co/auth/v1/callback` as the redirect URI |
 | Google says **Missing client_id** / "provider is not enabled" | Google isn't switched on in Supabase, or the ID is empty | Step 2 above |
 | The live site sends you back to **localhost** | Supabase Site URL is still localhost, or the live address isn't in Redirect URLs | Step 3, live column |
-| Sign-in buttons say sign-in **isn't set up** | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` missing | Add them, then restart `npm run dev` (laptop) or redeploy (Netlify) |
+| Sign-in buttons say sign-in **isn't set up** | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` missing | Laptop: add them to `.env.local` and restart `npm run dev`. Live site: check `.env.production` is committed |
 | Back on the site but the app says **Please sign in again** | The API couldn't check the token (older Supabase projects sign with a shared secret) | Put Supabase → Settings → JWT Keys → *Legacy JWT secret* in `SUPABASE_JWT_SECRET` (server-only, never `VITE_`) |
 | Only some Google accounts can sign in | The consent screen is still in *Testing* | Publish it, or add those accounts as test users |
 | You come back but the API answers 503 | `DATABASE_URL` isn't set | Add it to `.env.local` or Netlify |
@@ -283,17 +283,60 @@ Back in the couple's window, reload: Gupta family shows "2 of 2 coming" and need
 
 ## Deploy on Netlify
 
-Pushes to `main` deploy automatically through GitHub Actions (`.github/workflows/deploy.yml`): it installs, runs the tests, builds, and publishes `dist/` to Netlify. Pull requests get the tests and build only.
+The live site is https://weddingstay6768.netlify.app. **GitHub Actions builds it, not Netlify** (`.github/workflows/deploy.yml`): on every push to `main` it installs, runs the tests, builds `dist/` and uploads it to Netlify together with the API function (`backend/functions`). Pull requests get the tests and build only.
 
-One-time setup:
+That split decides where each setting lives:
 
-1. In Netlify, create an empty site (**Add new site → Deploy manually**, or `npx netlify-cli sites:create`), then copy its **Site ID** from Site configuration → General.
-2. Create a personal access token under Netlify **User settings → Applications → Personal access tokens**.
-3. In GitHub, **Settings → Secrets and variables → Actions**, add `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN`.
-4. In Netlify, **Site configuration → Environment variables**, add `DATABASE_URL` (the Supabase pooler connection string for `weddingstay_api`).
-5. Re-run the latest "Test and deploy" run, or push to `main`.
+| Setting | Where | Why |
+|---|---|---|
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (web page) | `.env.production` in the repo | Vite bakes them into the page while GitHub builds it. They're public, so committing them is fine. |
+| `DATABASE_URL` | Netlify environment variables | Secret. The API reads it on Netlify while running. |
+| `VITE_SUPABASE_URL` (API) | Netlify environment variables | The API uses it to check Google sign-in tokens. |
+| `SUPABASE_JWT_SECRET` | Netlify environment variables, only if needed | Secret. Only for the "Please sign in again" case in [Google sign-in setup](#if-something-goes-wrong). |
+| `NETLIFY_SITE_ID`, `NETLIFY_AUTH_TOKEN` | GitHub → Settings → Secrets and variables → Actions | Lets GitHub upload to Netlify. Already set (2026-11-11). |
 
-`netlify.toml` holds the cache and security headers. Routes use `#/…` URLs, so no redirect rules are needed. Don't also link the repo in Netlify's own Git settings, or every push deploys twice.
+### One-time setup
+
+**1. Connect GitHub to Netlify** (already done for this site)
+1. Netlify → **Add new site → Deploy manually** (or `npx netlify-cli sites:create`), then copy the **Site ID** from Site configuration → General.
+2. Netlify → **User settings → Applications → Personal access tokens** → create a token.
+3. GitHub → **Settings → Secrets and variables → Actions** → add `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN`.
+4. Don't also link the repo in Netlify's own Git settings, or every push deploys twice.
+
+**2. Netlify environment variables** → your site → **Site configuration → Environment variables → Add a variable**. Scope: *Functions* (or all), same value for every context:
+
+| Key | Value |
+|---|---|
+| `DATABASE_URL` | Supabase → weddingstay → **Connect** → **Transaction pooler** string for `weddingstay_api` (port 6543), with its password. Mark it **secret**. |
+| `VITE_SUPABASE_URL` | `https://sztprfjtncfmftvsvpuc.supabase.co` |
+| `SUPABASE_JWT_SECRET` | Leave out unless sign-in says "Please sign in again". |
+
+**3. Supabase and Google, for the live address** (see [Google sign-in setup](#google-sign-in-setup))
+- Supabase → Authentication → **URL Configuration**: Site URL `https://weddingstay6768.netlify.app`, and add `https://weddingstay6768.netlify.app/**` to Redirect URLs (keep `http://localhost:5173/**` for testing).
+- Google Cloud → your OAuth client → add `https://weddingstay6768.netlify.app` to **Authorized JavaScript origins**.
+- Google Cloud → **OAuth consent screen** → **Publish app**, so any Google account can sign in.
+
+**4. Deploy:** merge into `main`, or GitHub → **Actions → Test and deploy → Run workflow**. Netlify env changes also need a new deploy before the API sees them.
+
+### Check the live site
+
+1. GitHub → Actions → the latest **Test and deploy** run is green.
+2. Open https://weddingstay6768.netlify.app/api/docs. The API page should load. If it doesn't, the function wasn't deployed: check the Actions log.
+3. **Log in → Continue with Google** → you come back to `weddingstay6768.netlify.app` (not localhost) and see **My weddings**.
+4. **Add your wedding**, reload the page, and it's still there. An error here usually means `DATABASE_URL` is missing or wrong.
+
+### If something goes wrong on the live site
+
+| What you see | Fix |
+|---|---|
+| API answers 503 "No database is set up" | Add `DATABASE_URL` in Netlify, then redeploy |
+| 503 "Google sign-in isn't set up" from the API | Add `VITE_SUPABASE_URL` in Netlify, then redeploy |
+| Sign-in buttons say it **isn't set up** | `.env.production` is missing from the commit that was deployed |
+| Google sends you back to **localhost** | Supabase Site URL / Redirect URLs (step 3) |
+| Database "password authentication failed" or "Tenant not found" | Copy the pooler string again from Supabase → Connect (the host may be `aws-0-…` or `aws-1-…`) |
+| A change doesn't show up | Check the Actions run finished, then hard-refresh |
+
+`netlify.toml` holds the cache and security headers and points Netlify at `backend/functions`. Pages use `#/…` addresses, so no redirect rules are needed.
 
 ## Features
 
