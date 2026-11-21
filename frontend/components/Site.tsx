@@ -1,7 +1,8 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Mark } from './AppShell'
-import { savedToken } from '../store'
+import { savedHelper, savedToken, savedWedding } from '../store'
+import { useSession } from '../lib/auth'
 
 // Shared chrome for the public pages: header, footer, parallax and scroll reveal.
 
@@ -69,6 +70,9 @@ export function useParallax() {
 
 export function SiteHeader() {
   const go = useGoTo()
+  const { session } = useSession()
+  // Signed in: their weddings. A wedding open on this phone: straight to it. Otherwise: Log in.
+  const mine = session ? { to: '/me', label: 'My weddings' } : savedToken() || savedWedding() || savedHelper() ? { to: '/app', label: 'My wedding' } : { to: '/login', label: 'Log in' }
   return (
     <header className="sticky z-30 border-b border-line/60 bg-bg/80 backdrop-blur-xl" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
       <div className={`${wrap} flex items-center justify-between gap-3 py-3`} style={gutter}>
@@ -79,7 +83,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Link to={savedToken() ? '/app' : '/login'} className="btn !px-3 sm:!px-4 text-ink hover:bg-sunk">My wedding</Link>
+          <Link to={mine.to} className="btn !px-3 sm:!px-4 text-ink hover:bg-sunk">{mine.label}</Link>
           <Link to="/start" className="btn-primary"><span>Add<span className="hidden sm:inline"> your</span> wedding</span></Link>
         </div>
       </div>
@@ -117,7 +121,8 @@ export function SiteFooter() {
             <button className={a} onClick={() => go('faq')}>Questions</button>,
           ])}
           {col('Your wedding & legal', [
-            <Link className={a} to="/login">Open my wedding</Link>,
+            <Link className={a} to="/login">Log in</Link>,
+            <Link className={a} to="/register">Create an account</Link>,
             <Link className={a} to="/start">Add your wedding</Link>,
             <Link className={a} to="/terms">Terms and Conditions</Link>,
             <Link className={a} to="/privacy">Privacy Policy</Link>,

@@ -10,8 +10,8 @@ function match(method: string, pathname: string) {
   for (const [m, path, handler] of routes) {
     const want = path.split('/')
     if (m !== method || want.length !== parts.length) continue
-    let param = ''
-    if (want.every((w, i) => (w.startsWith(':') ? ((param = decodeURIComponent(parts[i])), !!parts[i]) : w === parts[i]))) return { handler, param }
+    const params: string[] = []
+    if (want.every((w, i) => (w.startsWith(':') ? (params.push(decodeURIComponent(parts[i])), !!parts[i]) : w === parts[i]))) return { handler, params }
   }
 }
 
@@ -21,7 +21,7 @@ export default async function api(req: Request): Promise<Response> {
   if (!hasDatabase && !/^\/api\/(docs|openapi\.json)$/.test(new URL(req.url).pathname))
     return json({ error: 'No database is set up. Add DATABASE_URL to .env.local and restart npm run dev.' }, 503)
   try {
-    return await route.handler(req, route.param)
+    return await route.handler(req, ...route.params)
   } catch (e) {
     if (e instanceof AppError) return json({ error: e.message }, e.status)
     console.error(e)

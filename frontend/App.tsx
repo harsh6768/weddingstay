@@ -13,7 +13,8 @@ import RsvpDesign from './pages/RsvpDesign'
 import Start from './pages/Start'
 import Settings from './pages/Settings'
 import { StoreProvider } from './store'
-import { Demo, GuestRoute, OpenHelp, OpenWedding, SaveLink } from './pages/Open'
+import { Demo, GuestRoute, OpenWedding, SaveLink } from './pages/Open'
+import { AuthReturn, Join, MyWeddings, SignIn } from './pages/Account'
 
 // The single-file preview runs inside a sandboxed frame, so it keeps routes in memory.
 const Router = import.meta.env.MODE === 'preview' ? MemoryRouter : HashRouter
@@ -29,14 +30,18 @@ export default function App() {
     <StoreProvider>
       <Router {...(import.meta.env.MODE === 'preview' ? { initialEntries: [import.meta.env.VITE_START_PATH || '/'] } : {})}>
         <ScrollTop />
+        <AuthReturn />
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<OpenHelp />} />
-          <Route path="/register" element={<Navigate to="/start" replace />} />
+          <Route path="/login" element={<SignIn />} />
+          <Route path="/register" element={<SignIn register />} />
+          <Route path="/me" element={<MyWeddings />} />
+          <Route path="/join/:code" element={<Join />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/start" element={<Start />} />
           <Route path="/w/:token" element={<OpenWedding />} />
+          <Route path="/h/:token" element={<OpenWedding helper />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/app" element={<AppShell />}>
             <Route index element={<Home />} />

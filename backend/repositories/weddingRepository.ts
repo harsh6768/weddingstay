@@ -27,3 +27,8 @@ export function update(id: string, change: (d: WeddingData) => WeddingData): Pro
     return data
   })
 }
+
+export async function findById(id: string): Promise<WeddingRow | undefined> {
+  const [row] = await sql<WeddingRow[]>`select id, data from weddings where id = ${id}`
+  return row
+}
