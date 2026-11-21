@@ -2,7 +2,13 @@
 
 Couple-first wedding guest and accommodation management for Indian weddings: one private link per family for RSVPs, travel and stay dates, then hotel rooms assigned night by night with conflict checks.
 
-The app has a **frontend** (what people see, in `frontend/`) and a **backend** (the API and database, in `backend/`). Code both need lives in `shared/`. There are no accounts yet: creating a wedding gives the couple a private link (`#/w/<token>`), and each family gets a guest link (`#/g/<id>`) that can only send that family's reply.
+The app has a **frontend** (what people see, in `frontend/`) and a **backend** (the API and database, in `backend/`). Code both need lives in `shared/`. The couple and their helpers can sign in with Google (optional); without it, creating a wedding gives the couple a private wedding link (`#/w/<token>`). Each family gets a guest link (`#/g/<id>`) that can only send that family's reply, and families never log in.
+
+## Documentation
+
+- [System design](docs/system-design.md): the parts, how requests flow, backend layers, sign-in, links and security
+- [Product flows](docs/product-flows.md): the couple, helpers, families and rooms, step by step with diagrams
+- [Database](docs/database.md): tables, columns, relationships (ER diagram) and what's inside a wedding's data
 
 ## Run it on your computer
 
